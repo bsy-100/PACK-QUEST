@@ -120,7 +120,17 @@ git log --oneline -1                                        # 커밋 번호
 ## 로그 보기 (데모 중에도)
 
 ```bash
-journalctl -u packquest-api -f
+journalctl -u packquest-api -f -o cat
+```
+
+`-o cat`은 journalctl 머리말을 빼고 앱이 쓴 줄만 보여준다(시각은 한국 시각). 5초 폴링(GET 200)은 나오지 않는다.
+
+```
+14:03:05  * 여행 생성 K7M3QX9P | 해외·비행기·1~2박·여름 | 주최자 승연 | 추천 50개
+14:03:05  POST    /api/trips                               201     31ms  203.0.113.7
+14:03:12  * 참여 K7M3QX9P | 준호 | 지금 2명
+14:03:20  PUT     /api/trips/K7M3QX9P/items/12/assignee    409     10ms  198.51.100.21   ITEM_TAKEN
+14:03:31  * 체크 K7M3QX9P | 준호: 여권 | 진행 1/50
 ```
 
 ## 문제 해결

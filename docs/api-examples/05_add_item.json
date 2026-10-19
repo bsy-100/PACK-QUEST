@@ -1,0 +1,24 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/trips/K7M3QX9P/items",
+    "headers": {
+      "X-Pack-Token": "<참여자 토큰>"
+    },
+    "body": {
+      "name": "보조배터리 2개",
+      "category": "electronics"
+    }
+  },
+  "response": {
+    "status": 201,
+    "body": {
+      "item_id": 1660,
+      "name": "보조배터리 2개",
+      "category": "electronics",
+      "assignee_id": null,
+      "done": false,
+      "source": "custom"
+    }
+  }
+}

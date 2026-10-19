@@ -1,6 +1,8 @@
 from collections.abc import Iterator
+from typing import Annotated
 
 import pymysql
+from fastapi import Depends
 from pymysql.cursors import DictCursor
 
 from app import config
@@ -28,7 +30,7 @@ def connect() -> pymysql.Connection:
 
 
 def get_db() -> Iterator[pymysql.Connection]:
-    """요청 하나에 연결 하나. 라우터에서 Depends(get_db)로 받는다."""
+    """요청 하나에 연결 하나. 라우터에서는 아래 Db 타입으로 받는다."""
     conn = connect()
     try:
         yield conn
@@ -38,3 +40,8 @@ def get_db() -> Iterator[pymysql.Connection]:
         raise
     finally:
         conn.close()
+
+
+# scope="function": 응답을 보내기 전에 커밋한다. 기본값("request")이면 응답을 보낸 뒤에
+# 커밋해서, 커밋이 실패해도 화면은 성공 응답을 받고, 바로 조회하면 바뀐 내용이 안 보일 수 있다.
+Db = Annotated[pymysql.Connection, Depends(get_db, scope="function")]

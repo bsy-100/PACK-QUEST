@@ -1,10 +1,10 @@
-import pymysql
 from fastapi import APIRouter, Depends, Response
 
-from app.auth import Member, current_member, host_only
-from app.db import get_db
+from app.auth import CurrentMember, host_only
+from app.db import Db
 from app.errors import ApiError
 from app.items import ITEM_COLUMNS, fetch_item, parse_item_id, to_item
+from app.logs import event
 from app.schemas import AssigneeUpdate, DoneUpdate, ItemCreate
 
 router = APIRouter()
@@ -13,7 +13,7 @@ MAX_ITEMS = 200
 
 
 @router.post("/api/trips/{code}/items", status_code=201)
-def add_item(body: ItemCreate, me: Member = Depends(current_member), db: pymysql.Connection = Depends(get_db)):
+def add_item(body: ItemCreate, me: CurrentMember, db: Db):
     with db.cursor() as cur:
         # 여행 행을 잠가서 동시에 추가해도 200개를 넘지 않게 한다.
         cur.execute("SELECT code FROM trips WHERE code = %s FOR UPDATE", (me.trip_code,))
@@ -26,16 +26,18 @@ def add_item(body: ItemCreate, me: Member = Depends(current_member), db: pymysql
             (me.trip_code, body.name, body.category),
         )
         row = fetch_item(cur, me.trip_code, cur.lastrowid)
+    event("항목 추가 %s | %s: %s", me.trip_code, me.nickname, body.name)
     return to_item(row)
 
 
 @router.delete("/api/trips/{code}/items/{item_id}", status_code=204)
-def delete_item(item_id: str, me: Member = Depends(current_member), db: pymysql.Connection = Depends(get_db)):
+def delete_item(item_id: str, me: CurrentMember, db: Db):
     host_only(me)
     item_no = parse_item_id(item_id)
     with db.cursor() as cur:
-        fetch_item(cur, me.trip_code, item_no)
+        item = fetch_item(cur, me.trip_code, item_no)
         cur.execute("DELETE FROM items WHERE id = %s AND trip_code = %s", (item_no, me.trip_code))
+    event("항목 삭제 %s | %s", me.trip_code, item["name"])
     return Response(status_code=204)
 
 
@@ -43,8 +45,8 @@ def delete_item(item_id: str, me: Member = Depends(current_member), db: pymysql.
 def set_assignee(
     item_id: str,
     body: AssigneeUpdate,
-    me: Member = Depends(current_member),
-    db: pymysql.Connection = Depends(get_db),
+    me: CurrentMember,
+    db: Db,
 ):
     item_no = parse_item_id(item_id)
     target = body.assignee_id
@@ -53,8 +55,9 @@ def set_assignee(
         current = item["assignee_id"]
 
         if target is not None:
-            cur.execute("SELECT id FROM members WHERE id = %s AND trip_code = %s", (target, me.trip_code))
-            if cur.fetchone() is None:
+            cur.execute("SELECT nickname FROM members WHERE id = %s AND trip_code = %s", (target, me.trip_code))
+            target_row = cur.fetchone()
+            if target_row is None:
                 raise ApiError(404, "MEMBER_NOT_FOUND", "그 참여자는 이 여행에 없습니다.")
 
         if target == current:
@@ -85,6 +88,11 @@ def set_assignee(
             )
 
         row = fetch_item(cur, me.trip_code, item_no)
+
+    if target is None:
+        event("담당 해제 %s | %s", me.trip_code, item["name"])
+    else:
+        event("담당 %s | %s → %s", me.trip_code, item["name"], target_row["nickname"])
     return to_item(row)
 
 
@@ -92,8 +100,8 @@ def set_assignee(
 def set_done(
     item_id: str,
     body: DoneUpdate,
-    me: Member = Depends(current_member),
-    db: pymysql.Connection = Depends(get_db),
+    me: CurrentMember,
+    db: Db,
 ):
     item_no = parse_item_id(item_id)
     with db.cursor() as cur:
@@ -112,4 +120,12 @@ def set_done(
 
         cur.execute("UPDATE items SET done = %s WHERE id = %s", (body.done, item_no))
         row = fetch_item(cur, me.trip_code, item_no)
+        cur.execute("SELECT COUNT(*) AS total, COALESCE(SUM(done), 0) AS done FROM items WHERE trip_code = %s", (me.trip_code,))
+        progress = cur.fetchone()
+
+    event(
+        "%s %s | %s: %s | 진행 %d/%d",
+        "체크" if body.done else "체크 해제", me.trip_code, me.nickname, item["name"],
+        int(progress["done"]), int(progress["total"]),
+    )
     return to_item(row)

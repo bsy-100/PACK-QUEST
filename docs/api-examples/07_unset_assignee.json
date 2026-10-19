@@ -1,0 +1,23 @@
+{
+  "request": {
+    "method": "PUT",
+    "path": "/api/trips/K7M3QX9P/items/1611/assignee",
+    "headers": {
+      "X-Pack-Token": "<참여자 토큰>"
+    },
+    "body": {
+      "assignee_id": null
+    }
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "item_id": 1611,
+      "name": "신용카드·체크카드",
+      "category": "documents",
+      "assignee_id": null,
+      "done": false,
+      "source": "recommended"
+    }
+  }
+}

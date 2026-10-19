@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "DELETE",
+    "path": "/api/trips/K7M3QX9P/items/1611",
+    "headers": {
+      "X-Pack-Token": "<주최자 토큰>"
+    }
+  },
+  "response": {
+    "status": 204,
+    "body": null
+  }
+}

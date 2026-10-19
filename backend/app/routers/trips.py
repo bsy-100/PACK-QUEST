@@ -2,10 +2,11 @@ import pymysql
 from fastapi import APIRouter, Depends, Response
 
 from app import recommend, security
-from app.auth import Member, current_member, host_only
-from app.db import get_db
+from app.auth import CurrentMember, host_only
+from app.db import Db
 from app.errors import ApiError
 from app.items import ITEM_COLUMNS, to_item
+from app.logs import event, label
 from app.schemas import Me, MemberCreate, MemberJoined, TripCreate, TripCreated
 
 router = APIRouter()
@@ -37,7 +38,7 @@ def _insert_member(cur, code: str, nickname: str, is_host: bool) -> tuple[int, s
     response_model=TripCreated,
     dependencies=[Depends(security.create_trip_limit)],
 )
-def create_trip(body: TripCreate, db: pymysql.Connection = Depends(get_db)):
+def create_trip(body: TripCreate, db: Db):
     with db.cursor() as cur:
         # 명세 "공유 코드": 기본 키가 겹치면 새로 뽑아 다시 넣는다.
         for _ in range(5):
@@ -62,6 +63,10 @@ def create_trip(body: TripCreate, db: pymysql.Connection = Depends(get_db)):
             [(code, item["name"], item["category"]) for item in items],
         )
 
+    event(
+        "여행 생성 %s | %s | 주최자 %s | 추천 %d개",
+        code, label(body.region, body.transport, body.duration, body.season), body.nickname, len(items),
+    )
     return TripCreated(code=code, token=token, me=Me(member_id=member_id, nickname=body.nickname, is_host=True))
 
 
@@ -71,7 +76,7 @@ def create_trip(body: TripCreate, db: pymysql.Connection = Depends(get_db)):
     response_model=MemberJoined,
     dependencies=[Depends(security.join_trip_limit)],
 )
-def join_trip(code: str, body: MemberCreate, db: pymysql.Connection = Depends(get_db)):
+def join_trip(code: str, body: MemberCreate, db: Db):
     # 명세 "값 규칙": 형식이 틀린 코드도 TRIP_NOT_FOUND
     normalized = security.normalize_code(code)
     with db.cursor() as cur:
@@ -81,7 +86,10 @@ def join_trip(code: str, body: MemberCreate, db: pymysql.Connection = Depends(ge
             raise ApiError(404, "TRIP_NOT_FOUND", "여행을 찾을 수 없습니다.")
 
         member_id, token = _insert_member(cur, normalized, body.nickname, is_host=False)
+        cur.execute("SELECT COUNT(*) AS n FROM members WHERE trip_code = %s", (normalized,))
+        count = cur.fetchone()["n"]
 
+    event("참여 %s | %s | 지금 %d명", normalized, body.nickname, count)
     return MemberJoined(code=normalized, token=token, me=Me(member_id=member_id, nickname=body.nickname, is_host=False))
 
 
@@ -91,7 +99,7 @@ def _rate(done: int, total: int) -> int:
 
 
 @router.get("/api/trips/{code}")
-def get_trip(me: Member = Depends(current_member), db: pymysql.Connection = Depends(get_db)):
+def get_trip(me: CurrentMember, db: Db):
     code = me.trip_code
     with db.cursor() as cur:
         cur.execute(
@@ -172,9 +180,10 @@ def get_trip(me: Member = Depends(current_member), db: pymysql.Connection = Depe
 
 
 @router.delete("/api/trips/{code}", status_code=204)
-def delete_trip(me: Member = Depends(current_member), db: pymysql.Connection = Depends(get_db)):
+def delete_trip(me: CurrentMember, db: Db):
     host_only(me)
     with db.cursor() as cur:
         # members, items는 ON DELETE CASCADE로 함께 지워진다.
         cur.execute("DELETE FROM trips WHERE code = %s", (me.trip_code,))
+    event("여행 삭제 %s | 주최자 %s", me.trip_code, me.nickname)
     return Response(status_code=204)

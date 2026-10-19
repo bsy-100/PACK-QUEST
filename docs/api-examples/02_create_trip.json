@@ -1,0 +1,25 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/trips",
+    "body": {
+      "region": "overseas",
+      "transport": "plane",
+      "duration": "short",
+      "season": "summer",
+      "nickname": "승연"
+    }
+  },
+  "response": {
+    "status": 201,
+    "body": {
+      "code": "K7M3QX9P",
+      "token": "<주최자 토큰>",
+      "me": {
+        "member_id": 166,
+        "nickname": "승연",
+        "is_host": true
+      }
+    }
+  }
+}

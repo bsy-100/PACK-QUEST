@@ -1,9 +1,12 @@
 {
-  "_note": "임시 추천 규칙(PRD '여행 조건과 추천 규칙' 기준). 공통 목록 + 조건별 목록을 합치고 같은 이름은 한 번만 넣는다.",
+  "_note": "추천 규칙(PRD '여행 조건과 추천 규칙'). 공통 목록 + 조건별 목록을 합치고 같은 이름은 한 번만 넣는다. category는 documents, clothing, toiletries, electronics, health, etc 중 하나, name은 50자 이하.",
   "common": [
     {"name": "지갑", "category": "documents"},
     {"name": "신용카드·체크카드", "category": "documents"},
     {"name": "현금", "category": "documents"},
+    {"name": "편한 신발", "category": "clothing"},
+    {"name": "립밤", "category": "toiletries"},
+    {"name": "핸드크림", "category": "toiletries"},
     {"name": "휴대폰 충전기", "category": "electronics"},
     {"name": "보조배터리", "category": "electronics"},
     {"name": "이어폰", "category": "electronics"},
@@ -15,15 +18,21 @@
     {"name": "휴지", "category": "etc"},
     {"name": "비닐봉지", "category": "etc"},
     {"name": "우산", "category": "etc"},
-    {"name": "텀블러", "category": "etc"}
+    {"name": "텀블러", "category": "etc"},
+    {"name": "간식", "category": "etc"},
+    {"name": "에코백", "category": "etc"}
   ],
   "region": {
     "domestic": [
-      {"name": "신분증", "category": "documents"}
+      {"name": "신분증", "category": "documents"},
+      {"name": "교통카드", "category": "documents"}
     ],
     "overseas": [
       {"name": "여권", "category": "documents"},
+      {"name": "여권 사본", "category": "documents"},
+      {"name": "비자·입국 서류 확인", "category": "documents"},
       {"name": "환전", "category": "documents"},
+      {"name": "해외 결제 카드", "category": "documents"},
       {"name": "여행자 보험", "category": "documents"},
       {"name": "유심·로밍", "category": "electronics"},
       {"name": "멀티 어댑터", "category": "electronics"}
@@ -33,15 +42,20 @@
     "plane": [
       {"name": "탑승권", "category": "documents"},
       {"name": "기내 반입 규정 확인", "category": "etc"},
-      {"name": "목베개", "category": "etc"}
+      {"name": "액체류 지퍼백(100ml 이하)", "category": "toiletries"},
+      {"name": "목베개", "category": "etc"},
+      {"name": "캐리어 이름표", "category": "etc"}
     ],
     "car": [
       {"name": "운전면허증", "category": "documents"},
+      {"name": "하이패스 카드", "category": "documents"},
       {"name": "차량용 충전기", "category": "electronics"},
+      {"name": "차량용 거치대", "category": "electronics"},
       {"name": "멀미약", "category": "health"}
     ],
     "train": [
-      {"name": "승차권", "category": "documents"}
+      {"name": "승차권", "category": "documents"},
+      {"name": "보조 쿠션", "category": "etc"}
     ]
   },
   "duration": {
@@ -81,18 +95,24 @@
   },
   "season": {
     "spring_fall": [
-      {"name": "가벼운 겉옷", "category": "clothing"}
+      {"name": "가벼운 겉옷", "category": "clothing"},
+      {"name": "얇은 긴팔", "category": "clothing"}
     ],
     "summer": [
       {"name": "선크림", "category": "health"},
+      {"name": "모기 기피제", "category": "health"},
       {"name": "모자", "category": "clothing"},
-      {"name": "선글라스", "category": "etc"}
+      {"name": "수영복", "category": "clothing"},
+      {"name": "선글라스", "category": "etc"},
+      {"name": "휴대용 선풍기", "category": "electronics"}
     ],
     "winter": [
       {"name": "핫팩", "category": "health"},
       {"name": "장갑", "category": "clothing"},
       {"name": "목도리", "category": "clothing"},
-      {"name": "두꺼운 외투", "category": "clothing"}
+      {"name": "두꺼운 외투", "category": "clothing"},
+      {"name": "내복", "category": "clothing"},
+      {"name": "보습크림", "category": "toiletries"}
     ]
   }
 }
