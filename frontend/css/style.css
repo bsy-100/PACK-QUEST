@@ -248,6 +248,42 @@ input:focus-visible, select:focus-visible, .btn:focus-visible {
 
 .me-line { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
 
+/* 함께 챙기기 / 내 짐 탭 */
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 12px;
+  background: var(--border);
+  border-radius: 12px;
+}
+.tab {
+  min-height: 44px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tab[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.tab:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.tab__count { font-weight: 400; font-size: 13px; color: var(--muted); }
+
+.panel-note { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+
+.item__tag {
+  font-size: 12px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.restore { margin-top: 8px; }
+.progress-card--personal .bar__fill { background: var(--primary); }
+
 .group + .group { margin-top: 12px; }
 .group__title { display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 4px; }
 .group__count { color: var(--muted); font-weight: 400; font-size: 13px; }

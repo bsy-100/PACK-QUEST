@@ -40,6 +40,7 @@ PQ.tokenStore = (function () {
         localStorage.removeItem(TOKEN_PREFIX + code);
         localStorage.removeItem(META_PREFIX + code);
       });
+      if (PQ.personal) PQ.personal.clear(code); // 그 여행의 "내 짐" 체크도 함께 지운다
     },
     // 토큰이 저장된 여행 목록 [{code, nickname, isHost}]
     list() {

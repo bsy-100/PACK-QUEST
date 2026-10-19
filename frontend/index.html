@@ -125,6 +125,15 @@
             <p class="progress-sub" id="progress-sub"></p>
             <ul class="members" id="member-list"></ul>
           </div>
+          <div class="card progress-card progress-card--personal">
+            <div class="progress-head">
+              <span>내 짐</span>
+              <strong id="personal-rate">0%</strong>
+            </div>
+            <div class="bar" role="progressbar" aria-label="내 짐 진행률" aria-valuemin="0" aria-valuemax="100"
+                 id="personal-bar"><span class="bar__fill" id="personal-fill"></span></div>
+            <p class="progress-sub" id="personal-sub"></p>
+          </div>
           <div class="card host-only" hidden>
             <button type="button" class="btn btn--danger btn--block" id="delete-trip">여행 삭제</button>
           </div>
@@ -132,16 +141,45 @@
 
         <div class="trip-main">
           <p class="me-line" id="me-line"></p>
-          <div id="item-groups"></div>
-          <form class="card form add-item" id="add-item-form" novalidate>
-            <h2 class="card__title">항목 추가</h2>
-            <div class="add-item__row">
-              <input type="text" name="name" maxlength="50" autocomplete="off" placeholder="준비물 이름" required>
-              <select name="category" id="add-item-category" aria-label="분류"></select>
-              <button type="submit" class="btn btn--primary">추가</button>
-            </div>
-            <p class="form__error" id="add-item-error" hidden></p>
-          </form>
+          <div class="tabs" role="tablist" aria-label="준비물 종류">
+            <button type="button" class="tab" role="tab" id="tab-shared" aria-controls="panel-shared" aria-selected="true">
+              함께 챙기기 <span class="tab__count" id="shared-count"></span>
+            </button>
+            <button type="button" class="tab" role="tab" id="tab-personal" aria-controls="panel-personal" aria-selected="false">
+              내 짐 <span class="tab__count" id="personal-count"></span>
+            </button>
+          </div>
+
+          <!-- 공용 준비물: 서버에 저장, 담당자를 나눠 맡는다 -->
+          <div role="tabpanel" id="panel-shared" aria-labelledby="tab-shared">
+            <p class="panel-note">한 명이 챙기면 되는 준비물이에요. 담당을 나눠 맡고 챙기면 체크해요.</p>
+            <div id="item-groups"></div>
+            <form class="card form add-item" id="add-item-form" novalidate>
+              <h2 class="card__title">함께 챙길 항목 추가</h2>
+              <div class="add-item__row">
+                <input type="text" name="name" maxlength="50" autocomplete="off" placeholder="준비물 이름" required>
+                <select name="category" id="add-item-category" aria-label="분류"></select>
+                <button type="submit" class="btn btn--primary">추가</button>
+              </div>
+              <p class="form__error" id="add-item-error" hidden></p>
+            </form>
+          </div>
+
+          <!-- 개인 준비물: 이 브라우저에만 저장, 팀원에게 보이지 않는다 -->
+          <div role="tabpanel" id="panel-personal" aria-labelledby="tab-personal" hidden>
+            <p class="panel-note">각자 챙기는 준비물이에요. 체크는 이 기기에만 저장되고 팀원에게는 보이지 않아요.</p>
+            <div id="personal-groups"></div>
+            <form class="card form add-item" id="personal-add-form" novalidate>
+              <h2 class="card__title">내 짐 추가</h2>
+              <div class="add-item__row">
+                <input type="text" name="name" maxlength="50" autocomplete="off" placeholder="예: 렌즈 세척액" required>
+                <select name="category" id="personal-add-category" aria-label="분류"></select>
+                <button type="submit" class="btn btn--primary">추가</button>
+              </div>
+              <p class="form__error" id="personal-add-error" hidden></p>
+            </form>
+            <button type="button" class="btn btn--ghost btn--small restore" id="personal-restore" hidden></button>
+          </div>
         </div>
       </div>
     </section>
@@ -166,7 +204,22 @@
     </li>
   </template>
 
+  <!-- 내 짐 한 줄 -->
+  <template id="personal-template">
+    <li class="item">
+      <label class="item__check">
+        <input type="checkbox" class="item__done">
+        <span class="item__name"></span>
+      </label>
+      <div class="item__meta">
+        <span class="item__tag" hidden>직접 추가</span>
+        <button type="button" class="btn btn--small btn--ghost personal__remove"></button>
+      </div>
+    </li>
+  </template>
+
   <script src="js/constants.js" defer></script>
+  <script src="js/personal.js" defer></script>
   <script src="js/api.js" defer></script>
   <script src="js/mock.js" defer></script>
   <script src="js/app.js" defer></script>

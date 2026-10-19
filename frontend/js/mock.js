@@ -23,35 +23,42 @@
     category: PQ.CATEGORY_ORDER,
   };
 
-  /* ---------- 추천 규칙 (실제 목록은 B의 서버 JSON이 기준이며, 여기는 화면 확인용 축약본) ---------- */
+  /* ---------- 추천 규칙 (공용 준비물만) ----------
+     서버는 나눠 맡는 공용 준비물만 추천하고, 각자 챙기는 개인 준비물은 화면(personal.js)이 만든다.
+     B의 recommend_rules.json(2026-10-19)에서 개인 항목을 뺀 것이며,
+     B가 JSON을 고치면(공용 항목 추가 등) 여기도 맞춰 준다. */
 
   const COMMON = [
-    ["documents", "신분증"], ["documents", "지갑·카드"],
-    ["clothing", "속옷"], ["clothing", "양말"], ["clothing", "잠옷"],
-    ["toiletries", "칫솔·치약"], ["toiletries", "세면도구"], ["toiletries", "수건"],
-    ["electronics", "휴대폰 충전기"], ["electronics", "보조배터리"], ["electronics", "이어폰"],
-    ["health", "상비약"], ["health", "밴드"], ["health", "마스크"],
-    ["etc", "물티슈"], ["etc", "비닐봉지"], ["etc", "우산"],
+    ["health", "상비약(소화제·진통제)"], ["health", "밴드"], ["health", "손 소독제"],
+    ["etc", "물티슈"], ["etc", "휴지"], ["etc", "비닐봉지"],
+  ];
+  const SHORT_STAY = [
+    ["documents", "숙소 예약 확인"],
+    ["toiletries", "치약"], ["toiletries", "샴푸·린스"], ["toiletries", "바디워시"],
   ];
   const BY_CONDITION = {
     region: {
       domestic: [],
-      overseas: [["documents", "여권"], ["documents", "환전"], ["electronics", "유심·로밍"], ["electronics", "멀티 어댑터"]],
+      overseas: [["documents", "환전"], ["electronics", "멀티 어댑터"]],
     },
     transport: {
-      plane: [["documents", "탑승권"], ["etc", "기내 반입 규정 확인"]],
+      plane: [["etc", "기내 반입 규정 확인"]],
       car: [["documents", "운전면허증"], ["electronics", "차량용 충전기"], ["health", "멀미약"]],
       train: [["documents", "승차권"]],
     },
     duration: {
       day: [],
-      short: [["clothing", "갈아입을 옷"]],
-      long: [["clothing", "갈아입을 옷"], ["clothing", "여벌 신발"], ["toiletries", "화장품"], ["health", "개인 복용약"]],
+      short: SHORT_STAY,
+      long: [
+        ...SHORT_STAY,
+        ["clothing", "세탁물 봉투"], ["toiletries", "손톱깎이"],
+        ["electronics", "멀티탭"], ["health", "감기약"],
+      ],
     },
     season: {
-      spring_fall: [["clothing", "얇은 겉옷"]],
-      summer: [["health", "선크림"], ["clothing", "모자"]],
-      winter: [["etc", "핫팩"], ["clothing", "장갑"]],
+      spring_fall: [],
+      summer: [["health", "선크림"]],
+      winter: [["health", "핫팩"]],
     },
   };
 
@@ -292,20 +299,17 @@
       const item = findItem(code, parts[3]);
       const target = body.assignee_id;
       if (target !== null && !Number.isInteger(target)) fail(422, "VALIDATION_ERROR");
-      if (!me.is_host) {
-        if (target === null) {
-          if (item.assignee_id !== null && item.assignee_id !== me.id) fail(403, "NOT_ALLOWED");
-        } else if (target !== me.id) {
-          fail(403, "NOT_ALLOWED");
-        } else if (item.assignee_id !== null && item.assignee_id !== me.id) {
-          fail(409, "ITEM_TAKEN");
-        }
-      }
+      // 검사 순서는 B의 routers/items.py set_assignee와 같다.
       if (target !== null && !db.members.some((m) => m.id === target && m.trip_code === code)) fail(404, "MEMBER_NOT_FOUND");
-      if (item.assignee_id !== target) {
-        item.assignee_id = target;
-        item.done = false; // 담당자가 바뀌거나 해제되면 미완료로 되돌린다
+      const current = item.assignee_id;
+      if (target === current) return json(200, itemOut(item)); // 바뀌는 것이 없으면 done도 그대로
+      if (!me.is_host) {
+        if (target !== null && target !== me.id) fail(403, "NOT_ALLOWED");
+        if (target === null && current !== me.id) fail(403, "NOT_ALLOWED");
+        if (target === me.id && current !== null) fail(409, "ITEM_TAKEN");
       }
+      item.assignee_id = target;
+      item.done = false; // 담당자가 바뀌거나 해제되면 미완료로 되돌린다
       return json(200, itemOut(item));
     }
 
