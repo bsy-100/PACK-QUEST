@@ -1,0 +1,23 @@
+{
+  "request": {
+    "method": "PUT",
+    "path": "/api/trips/K7M3QX9P/items/1888/assignee",
+    "headers": {
+      "X-Pack-Token": "<참여자 토큰>"
+    },
+    "body": {
+      "assignee_id": 174
+    }
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "item_id": 1888,
+      "name": "숙소 예약 확인",
+      "category": "documents",
+      "assignee_id": 174,
+      "done": false,
+      "source": "recommended"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "PUT",
+    "path": "/api/trips/K7M3QX9P/items/1884/done",
+    "headers": {
+      "X-Pack-Token": "<주최자 토큰>"
+    },
+    "body": {
+      "done": false
+    }
+  },
+  "response": {
+    "status": 403,
+    "body": {
+      "detail": {
+        "code": "NOT_YOUR_ITEM",
+        "message": "담당자만 체크할 수 있습니다."
+      }
+    }
+  }
+}

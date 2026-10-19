@@ -1,0 +1,73 @@
+{
+  "_note": "공용 준비물 추천 규칙. 여럿이 하나만 챙기면 되는 항목만 둔다(나눠 맡기). 여권·칫솔·옷처럼 각자 챙기는 개인 항목은 화면(C)의 '내 짐' 체크리스트가 맡는다. 공통 목록 + 조건별 목록을 합치고 같은 이름은 한 번만 넣는다. category는 documents, clothing, toiletries, electronics, health, etc 중 하나, name은 50자 이하.",
+  "common": [
+    {"name": "상비약(소화제·진통제)", "category": "health"},
+    {"name": "밴드·소독약", "category": "health"},
+    {"name": "손 소독제", "category": "health"},
+    {"name": "대용량 보조배터리", "category": "electronics"},
+    {"name": "카메라·삼각대", "category": "electronics"},
+    {"name": "블루투스 스피커", "category": "electronics"},
+    {"name": "물티슈", "category": "etc"},
+    {"name": "휴지", "category": "etc"},
+    {"name": "쓰레기봉투", "category": "etc"},
+    {"name": "간식", "category": "etc"}
+  ],
+  "region": {
+    "domestic": [],
+    "overseas": [
+      {"name": "환전(공용 경비)", "category": "documents"},
+      {"name": "멀티 어댑터", "category": "electronics"},
+      {"name": "포켓 와이파이", "category": "electronics"}
+    ]
+  },
+  "transport": {
+    "plane": [
+      {"name": "기내 반입 규정 확인", "category": "etc"}
+    ],
+    "car": [
+      {"name": "운전면허증(운전자)", "category": "documents"},
+      {"name": "하이패스 카드", "category": "documents"},
+      {"name": "차량용 충전기", "category": "electronics"},
+      {"name": "차량용 거치대", "category": "electronics"},
+      {"name": "멀미약", "category": "health"}
+    ],
+    "train": [
+      {"name": "단체 승차권 예매 확인", "category": "documents"}
+    ]
+  },
+  "duration": {
+    "day": [],
+    "short": [
+      {"name": "숙소 예약 확인", "category": "documents"},
+      {"name": "샴푸·린스", "category": "toiletries"},
+      {"name": "바디워시", "category": "toiletries"},
+      {"name": "치약", "category": "toiletries"},
+      {"name": "보드게임", "category": "etc"}
+    ],
+    "long": [
+      {"name": "숙소 예약 확인", "category": "documents"},
+      {"name": "샴푸·린스", "category": "toiletries"},
+      {"name": "바디워시", "category": "toiletries"},
+      {"name": "치약", "category": "toiletries"},
+      {"name": "공용 세제", "category": "toiletries"},
+      {"name": "손톱깎이", "category": "toiletries"},
+      {"name": "멀티탭", "category": "electronics"},
+      {"name": "감기약", "category": "health"},
+      {"name": "세탁물 봉투", "category": "etc"},
+      {"name": "보드게임", "category": "etc"}
+    ]
+  },
+  "season": {
+    "spring_fall": [
+      {"name": "돗자리", "category": "etc"}
+    ],
+    "summer": [
+      {"name": "선크림", "category": "health"},
+      {"name": "모기 기피제", "category": "health"},
+      {"name": "돗자리", "category": "etc"}
+    ],
+    "winter": [
+      {"name": "핫팩 묶음", "category": "health"}
+    ]
+  }
+}
