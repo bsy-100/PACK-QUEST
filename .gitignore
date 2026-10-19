@@ -1,0 +1,13 @@
+# 비밀번호·설정
+.env
+*.pem
+
+# 파이썬
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# 기타
+.DS_Store
+.vscode/
