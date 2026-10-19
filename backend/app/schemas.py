@@ -1,9 +1,11 @@
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, StrictBool, StringConstraints
 
-# 명세 "값 규칙": 앞뒤 공백 제거 후 1~20자
+# 명세 "값 규칙": 앞뒤 공백 제거 후 nickname 1~20자, 항목 name 1~50자
 Nickname = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=20)]
+ItemName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)]
+Category = Literal["documents", "clothing", "toiletries", "electronics", "health", "etc"]
 
 
 class TripCreate(BaseModel):
@@ -34,3 +36,17 @@ class MemberJoined(BaseModel):
     code: str
     token: str
     me: Me
+
+
+class ItemCreate(BaseModel):
+    name: ItemName
+    category: Category
+
+
+class AssigneeUpdate(BaseModel):
+    # 기본값이 없으므로 반드시 보내야 하고, null은 해제다.
+    assignee_id: int | None
+
+
+class DoneUpdate(BaseModel):
+    done: StrictBool
