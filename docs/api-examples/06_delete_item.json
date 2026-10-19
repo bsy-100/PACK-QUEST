@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "DELETE",
-    "path": "/api/trips/K7M3QX9P/items/1611",
+    "path": "/api/trips/K7M3QX9P/items/1888",
     "headers": {
       "X-Pack-Token": "<주최자 토큰>"
     }

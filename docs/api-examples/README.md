@@ -11,13 +11,15 @@
 | `01_health.json` | `GET /api/health` | 200 |
 | `02_create_trip.json` | `POST /api/trips` 여행 만들기 | 201 |
 | `03_join_trip.json` | `POST /api/trips/{code}/members` 참여(소문자 코드로 보내도 응답 `code`는 대문자) | 201 |
-| `04_get_trip.json` | `GET /api/trips/{code}` 전체 상태(5초 폴링). 항목 50개, 1개 체크된 상태 | 200 |
+| `04_get_trip.json` | `GET /api/trips/{code}` 전체 상태(5초 폴링). 공용 항목 22개, 1개 체크된 상태 | 200 |
 | `05_add_item.json` | `POST /api/trips/{code}/items` 항목 추가 | 201 |
 | `06_delete_item.json` | `DELETE /api/trips/{code}/items/{item_id}` 항목 삭제(본문 없음) | 204 |
 | `07_set_assignee.json`, `07_unset_assignee.json` | `PUT .../assignee` 맡기·해제 | 200 |
 | `08_set_done.json` | `PUT .../done` 완료 체크 | 200 |
 | `09_delete_trip.json` | `DELETE /api/trips/{code}` 여행 삭제(본문 없음) | 204 |
 | `err_*.json` | 대표 오류 7가지. 화면은 `detail.code`로 분기한다 | 401·403·404·409·422 |
+
+서버가 주는 추천 목록은 **공용 준비물**(나눠 맡는 것)뿐이다. 여권·칫솔·옷 같은 **개인 준비물**은 서버에 없으므로, 화면이 "내 짐" 체크리스트를 따로 두고 브라우저에만 저장한다(팀 진행률에는 들어가지 않는다).
 
 화면에서 기억할 것(명세 요약):
 
