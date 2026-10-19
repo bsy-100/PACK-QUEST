@@ -25,40 +25,45 @@
 
   /* ---------- 추천 규칙 (공용 준비물만) ----------
      서버는 나눠 맡는 공용 준비물만 추천하고, 각자 챙기는 개인 준비물은 화면(personal.js)이 만든다.
-     B의 recommend_rules.json(2026-10-19)에서 개인 항목을 뺀 것이며,
-     B가 JSON을 고치면(공용 항목 추가 등) 여기도 맞춰 준다. */
+     B의 backend/app/data/recommend_rules.json(feature/api 4b7151d)을 그대로 옮긴 것이며,
+     B가 JSON을 고치면 여기도 맞춰 준다. */
 
   const COMMON = [
-    ["health", "상비약(소화제·진통제)"], ["health", "밴드"], ["health", "손 소독제"],
-    ["etc", "물티슈"], ["etc", "휴지"], ["etc", "비닐봉지"],
+    ["health", "상비약(소화제·진통제)"], ["health", "밴드·소독약"], ["health", "손 소독제"],
+    ["electronics", "대용량 보조배터리"], ["electronics", "카메라·삼각대"], ["electronics", "블루투스 스피커"],
+    ["etc", "물티슈"], ["etc", "휴지"], ["etc", "쓰레기봉투"], ["etc", "간식"],
   ];
   const SHORT_STAY = [
     ["documents", "숙소 예약 확인"],
-    ["toiletries", "치약"], ["toiletries", "샴푸·린스"], ["toiletries", "바디워시"],
+    ["toiletries", "샴푸·린스"], ["toiletries", "바디워시"], ["toiletries", "치약"],
   ];
   const BY_CONDITION = {
     region: {
       domestic: [],
-      overseas: [["documents", "환전"], ["electronics", "멀티 어댑터"]],
+      overseas: [["documents", "환전(공용 경비)"], ["electronics", "멀티 어댑터"], ["electronics", "포켓 와이파이"]],
     },
     transport: {
       plane: [["etc", "기내 반입 규정 확인"]],
-      car: [["documents", "운전면허증"], ["electronics", "차량용 충전기"], ["health", "멀미약"]],
-      train: [["documents", "승차권"]],
+      car: [
+        ["documents", "운전면허증(운전자)"], ["documents", "하이패스 카드"],
+        ["electronics", "차량용 충전기"], ["electronics", "차량용 거치대"], ["health", "멀미약"],
+      ],
+      train: [["documents", "단체 승차권 예매 확인"]],
     },
     duration: {
       day: [],
-      short: SHORT_STAY,
+      short: [...SHORT_STAY, ["etc", "보드게임"]],
       long: [
         ...SHORT_STAY,
-        ["clothing", "세탁물 봉투"], ["toiletries", "손톱깎이"],
+        ["toiletries", "공용 세제"], ["toiletries", "손톱깎이"],
         ["electronics", "멀티탭"], ["health", "감기약"],
+        ["etc", "세탁물 봉투"], ["etc", "보드게임"],
       ],
     },
     season: {
-      spring_fall: [],
-      summer: [["health", "선크림"]],
-      winter: [["health", "핫팩"]],
+      spring_fall: [["etc", "돗자리"]],
+      summer: [["health", "선크림"], ["health", "모기 기피제"], ["etc", "돗자리"]],
+      winter: [["health", "핫팩 묶음"]],
     },
   };
 
