@@ -1,14 +1,15 @@
 from collections.abc import Iterator
+from typing import Annotated
 
 import pymysql
+from fastapi import Depends
 from pymysql.cursors import DictCursor
 
 from app import config
 
 
 def connect() -> pymysql.Connection:
-    # 명세 "DB 시간대": 연결할 때마다 UTC로 맞춘다.
-    return pymysql.connect(
+    conn = pymysql.connect(
         host=config.DB_HOST,
         port=config.DB_PORT,
         user=config.DB_USER,
@@ -17,12 +18,19 @@ def connect() -> pymysql.Connection:
         charset="utf8mb4",
         cursorclass=DictCursor,
         autocommit=False,
-        init_command="SET time_zone = '+00:00'",
     )
+    with conn.cursor() as cur:
+        # 명세 "DB 시간대": 연결할 때마다 UTC로 맞춘다.
+        cur.execute("SET time_zone = '+00:00'")
+        # MariaDB 11.8 기본값(REPEATABLE READ + 스냅숏 격리)에서는 동시에 같은 항목을 맡을 때
+        # 1020 "Record has changed since last read" 오류가 난다. 조건을 건 UPDATE가
+        # 최신 값으로 판단하도록 READ COMMITTED로 둔다.
+        cur.execute("SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED")
+    return conn
 
 
 def get_db() -> Iterator[pymysql.Connection]:
-    """요청 하나에 연결 하나. 라우터에서 Depends(get_db)로 받는다."""
+    """요청 하나에 연결 하나. 라우터에서는 아래 Db 타입으로 받는다."""
     conn = connect()
     try:
         yield conn
@@ -32,3 +40,8 @@ def get_db() -> Iterator[pymysql.Connection]:
         raise
     finally:
         conn.close()
+
+
+# scope="function": 응답을 보내기 전에 커밋한다. 기본값("request")이면 응답을 보낸 뒤에
+# 커밋해서, 커밋이 실패해도 화면은 성공 응답을 받고, 바로 조회하면 바뀐 내용이 안 보일 수 있다.
+Db = Annotated[pymysql.Connection, Depends(get_db, scope="function")]

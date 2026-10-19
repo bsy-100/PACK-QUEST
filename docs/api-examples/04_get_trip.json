@@ -1,0 +1,264 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/api/trips/K7M3QX9P",
+    "headers": {
+      "X-Pack-Token": "<참여자 토큰>"
+    }
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "trip": {
+        "code": "K7M3QX9P",
+        "region": "overseas",
+        "transport": "plane",
+        "duration": "short",
+        "season": "summer",
+        "created_at": "2026-10-19T07:38:09Z"
+      },
+      "me": {
+        "member_id": 174,
+        "nickname": "준호",
+        "is_host": false
+      },
+      "members": [
+        {
+          "member_id": 173,
+          "nickname": "승연",
+          "is_host": true
+        },
+        {
+          "member_id": 174,
+          "nickname": "준호",
+          "is_host": false
+        }
+      ],
+      "items": [
+        {
+          "item_id": 1884,
+          "name": "환전(공용 경비)",
+          "category": "documents",
+          "assignee_id": 174,
+          "done": true,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1888,
+          "name": "숙소 예약 확인",
+          "category": "documents",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1889,
+          "name": "샴푸·린스",
+          "category": "toiletries",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1890,
+          "name": "바디워시",
+          "category": "toiletries",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1891,
+          "name": "치약",
+          "category": "toiletries",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1877,
+          "name": "대용량 보조배터리",
+          "category": "electronics",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1878,
+          "name": "카메라·삼각대",
+          "category": "electronics",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1879,
+          "name": "블루투스 스피커",
+          "category": "electronics",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1885,
+          "name": "멀티 어댑터",
+          "category": "electronics",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1886,
+          "name": "포켓 와이파이",
+          "category": "electronics",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1874,
+          "name": "상비약(소화제·진통제)",
+          "category": "health",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1875,
+          "name": "밴드·소독약",
+          "category": "health",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1876,
+          "name": "손 소독제",
+          "category": "health",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1893,
+          "name": "선크림",
+          "category": "health",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1894,
+          "name": "모기 기피제",
+          "category": "health",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1880,
+          "name": "물티슈",
+          "category": "etc",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1881,
+          "name": "휴지",
+          "category": "etc",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1882,
+          "name": "쓰레기봉투",
+          "category": "etc",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1883,
+          "name": "간식",
+          "category": "etc",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1887,
+          "name": "기내 반입 규정 확인",
+          "category": "etc",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1892,
+          "name": "보드게임",
+          "category": "etc",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        },
+        {
+          "item_id": 1895,
+          "name": "돗자리",
+          "category": "etc",
+          "assignee_id": null,
+          "done": false,
+          "source": "recommended"
+        }
+      ],
+      "progress": {
+        "total": 22,
+        "done": 1,
+        "unassigned": 21,
+        "rate": 5,
+        "by_member": [
+          {
+            "member_id": 173,
+            "assigned": 0,
+            "done": 0,
+            "rate": 0
+          },
+          {
+            "member_id": 174,
+            "assigned": 1,
+            "done": 1,
+            "rate": 100
+          }
+        ],
+        "by_category": [
+          {
+            "category": "documents",
+            "total": 2,
+            "done": 1
+          },
+          {
+            "category": "toiletries",
+            "total": 3,
+            "done": 0
+          },
+          {
+            "category": "electronics",
+            "total": 5,
+            "done": 0
+          },
+          {
+            "category": "health",
+            "total": 5,
+            "done": 0
+          },
+          {
+            "category": "etc",
+            "total": 7,
+            "done": 0
+          }
+        ]
+      }
+    }
+  }
+}

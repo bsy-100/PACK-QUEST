@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/trips/K7M3QX9P/members",
+    "body": {
+      "nickname": "준호"
+    }
+  },
+  "response": {
+    "status": 409,
+    "body": {
+      "detail": {
+        "code": "NICKNAME_TAKEN",
+        "message": "이미 쓰는 닉네임입니다."
+      }
+    }
+  }
+}

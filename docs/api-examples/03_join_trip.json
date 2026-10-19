@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/trips/k7m3qx9p/members",
+    "body": {
+      "nickname": "준호"
+    }
+  },
+  "response": {
+    "status": 201,
+    "body": {
+      "code": "K7M3QX9P",
+      "token": "<참여자 토큰>",
+      "me": {
+        "member_id": 174,
+        "nickname": "준호",
+        "is_host": false
+      }
+    }
+  }
+}

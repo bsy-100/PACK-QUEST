@@ -1,0 +1,24 @@
+# /etc/systemd/system/packquest-api.service
+# 설치: sudo cp backend/deploy/packquest-api.service /etc/systemd/system/
+#       sudo systemctl daemon-reload && sudo systemctl enable --now packquest-api
+[Unit]
+Description=PACK QUEST API (FastAPI)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# 일반 사용자로 실행한다(PRD 구축 절차 13).
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/PACK-QUEST/backend
+# DB 호스트·계정·파라미터 이름. 비밀번호는 넣지 않는다(Parameter Store에서 읽음).
+EnvironmentFile=/etc/packquest/api.env
+# 0.0.0.0이어야 CloudFront(VPC 오리진) 요청을 받는다. 127.0.0.1이면 502.
+# 요청 제한이 메모리 방식이라 worker는 1개(--workers 쓰지 않음).
+# 요청 로그는 app/logs.py가 남기므로 uvicorn 기본 접근 로그는 끈다(5초 폴링이 로그를 덮지 않게).
+ExecStart=/home/ubuntu/PACK-QUEST/backend/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --no-access-log
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

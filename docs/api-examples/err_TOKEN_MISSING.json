@@ -1,0 +1,15 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/api/trips/K7M3QX9P"
+  },
+  "response": {
+    "status": 401,
+    "body": {
+      "detail": {
+        "code": "TOKEN_MISSING",
+        "message": "토큰이 없습니다."
+      }
+    }
+  }
+}

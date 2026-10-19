@@ -1,0 +1,22 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/trips",
+    "body": {
+      "region": "moon",
+      "transport": "plane",
+      "duration": "short",
+      "season": "summer",
+      "nickname": "승연"
+    }
+  },
+  "response": {
+    "status": 422,
+    "body": {
+      "detail": {
+        "code": "VALIDATION_ERROR",
+        "message": "입력값이 올바르지 않습니다."
+      }
+    }
+  }
+}
