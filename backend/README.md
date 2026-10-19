@@ -31,6 +31,10 @@ http://127.0.0.1:8000/api/health → `{"status": "ok"}`
 
 서버에서는 요청 제한이 메모리 방식이라 worker 1개로 실행한다(`--workers` 옵션을 쓰지 않는다).
 
+## 서버 배포
+
+[deploy/DEPLOY.md](deploy/DEPLOY.md). 서버에서는 비밀번호를 `.env`가 아니라 Parameter Store(`DB_PASSWORD_PARAM`)에서 읽는다.
+
 ## 확인
 
 서버를 띄운 상태에서 실행한다. 9개 API와 오류 코드를 차례로 요청해 보고, 만든 테스트 여행은 지운다.
