@@ -115,7 +115,13 @@ sudo systemctl restart mariadb
 sudo ss -ltnp | grep 3306        # <프라이빗 IP>:3306 이어야 함
 ```
 
-DB·앱 계정 생성 (비밀번호는 `openssl rand -base64 24`로 만들고 **바로 Parameter Store에 넣은 뒤 화면을 지운다**):
+DB·앱 계정 생성:
+
+> ⚠️ **순서 변경(10/20)**: 단계 12를 먼저 해서 비밀번호가 **이미 Parameter Store `/packquest/db-password`(버전 1, 영문·숫자 32자)에 있다.** 여기서 새 비밀번호를 만들지 않는다.
+> - 콘솔 → Systems Manager → Parameter Store → `/packquest/db-password` → **값 표시**로 복사해 `<RANDOM_PASSWORD>` 자리에 붙여 넣는다. 앞뒤 공백이 섞이지 않게 한다.
+> - 실행 후 바로 `clear`, 콘솔의 값 표시를 닫는다. 채팅·문서·메모에 붙여 넣지 않는다.
+> - 파라미터 값을 바꾸면 `ALTER USER`로 DB 비밀번호도 바꾸고 B 서비스를 재시작해야 한다. 단계 11 전에는 파라미터를 건드리지 않는다.
+> - 일치 여부는 "2일 차 끝 DB 접속 확인"에서 앱 계정 접속 성공으로 검증한다.
 ```sql
 -- sudo mariadb
 CREATE DATABASE packquest CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -133,7 +139,9 @@ SHOW GRANTS FOR 'packquest_app'@'<BACKEND_PRIVATE_IP>';
 > 주의: 앱 계정은 Backend **프라이빗 IP에 묶여 있다**. Backend 인스턴스를 다시 만들면 IP가 바뀌므로 계정의 host도 바꿔야 한다.
 
 ### 단계 12 — Parameter Store
-- [ ] `/packquest/db-password`, 유형 **SecureString**, 값 = 위 무작위 비밀번호
+- [x] `/packquest/db-password`, 유형 **SecureString**, 값 = 위 무작위 비밀번호 — 10/20 **단계 11보다 먼저** CLI 생성(값은 출력하지 않음). 조회 확인: SecureString, `alias/aws/ssm`, Standard, 버전 1, ARN이 Backend 역할 정책 Resource와 일치
+  - 먼저 한 이유: B의 `backend/app/config.py`가 시작할 때 이 파라미터를 읽어서, 없으면 서비스가 뜨지 않는다
+- [ ] B가 Backend 서버에서 읽기 권한 확인(`read-ok`, 값 출력 없음) — 미확인
 - [ ] B에게 전달: DB 호스트(DB 프라이빗 IP), 계정명 `packquest_app`, DB명 `packquest`, 파라미터 이름 `/packquest/db-password` (**비밀번호 자체는 전달하지 않음**)
 
 ### 2일 차 끝: DB 접속 확인 (인계물)
@@ -286,7 +294,7 @@ sudo mariadb -e "DROP DATABASE packquest_restore_test;"
 | Backend EC2 | packquest-backend | Ubuntu 24.04 LTS (ami-0e1eeb87102d64f40), t3.small, packquest-private-app, 프라이빗 IP 10.0.1.154 (ip-10-0-1-154.ap-northeast-2.compute.internal), 공인 IP·키 페어 없음, sg-app, packquest-ec2-backend-role, IMDSv2 필수, EBS 8GB gp3 암호화(vol-038bb10ecc7402eba) | i-033c073cd3d240ab7 (10/20) |
 | DB EC2 | packquest-db | Ubuntu ___, 프라이빗 IP ___ | |
 | MariaDB | DB `packquest` | bind-address ___, 앱 계정 `packquest_app@<backend IP>` | 권한 S/I/U/D |
-| Parameter | /packquest/db-password | SecureString, aws/ssm 키 | |
+| Parameter | /packquest/db-password | SecureString, aws/ssm 키, Standard, 영문·숫자 32자. **단계 11의 CREATE USER에 이 값을 써야 함** | 버전 1 (10/20, 단계 11보다 먼저 생성) |
 | S3 버킷 | packquest-web-1b07b2 | ap-northeast-2, 퍼블릭 액세스 차단 4개 모두 켬, 정적 웹 호스팅 없음, 객체 소유권 BucketOwnerEnforced(ACL 비활성), 기본 암호화 SSE-S3, 버킷 정책 없음(단계 15에서 OAC 정책 추가) | arn:aws:s3:::packquest-web-1b07b2 (10/20) |
 | VPC 오리진 | packquest-vpc-origin | HTTP 8000, 프라이빗 IP DNS | |
 | CloudFront | packquest-cf | 기본→S3(OAC), `/api/*`→VPC 오리진, CachingDisabled, AllViewerAndCloudFrontHeaders-2022-06, Error pages 없음 | 도메인 ___ |
