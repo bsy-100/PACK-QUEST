@@ -19,6 +19,22 @@ PQ.LABELS = {
   source: { recommended: "추천", custom: "직접 추가" },
 };
 
+// 화면에 붙이는 아이콘(이모지). 값 목록의 코드값과 같은 키를 쓴다.
+PQ.ICONS = {
+  region: { domestic: "🗺️", overseas: "🌏" },
+  transport: { plane: "✈️", car: "🚗", train: "🚆" },
+  duration: { day: "☀️", short: "🌙", long: "🧭" },
+  season: { spring_fall: "🌸", summer: "🏖️", winter: "❄️" },
+  category: {
+    documents: "🛂",
+    clothing: "👕",
+    toiletries: "🧴",
+    electronics: "🔌",
+    health: "💊",
+    etc: "🎒",
+  },
+};
+
 // 서버의 items 정렬 순서(ENUM 정의 순서)와 같다.
 PQ.CATEGORY_ORDER = ["documents", "clothing", "toiletries", "electronics", "health", "etc"];
 

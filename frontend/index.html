@@ -3,17 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#FFF9F1">
   <title>PACK QUEST</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header class="topbar">
-    <a href="./" class="brand" id="brand-link">PACK QUEST</a>
-    <span class="mock-badge" id="mock-badge" hidden>임시 데이터</span>
+    <a href="./" class="brand" id="brand-link"><span class="brand__icon" aria-hidden="true">🧳</span>PACK QUEST</a>
+    <span class="mock-badge" id="mock-badge" hidden>체험 모드 · 임시 데이터</span>
   </header>
 
   <!-- 오류 안내: API 실패 시 메시지와 재시도 버튼 -->
   <div class="error-banner" id="error-banner" role="alert" hidden>
+    <span class="error-banner__icon" aria-hidden="true">🧭</span>
     <span class="error-banner__msg" id="error-message"></span>
     <button type="button" class="btn btn--small" id="error-retry">다시 시도</button>
     <button type="button" class="btn btn--ghost btn--small" id="error-close" aria-label="닫기">닫기</button>
@@ -23,119 +26,187 @@
     <!-- 1. 시작 -->
     <section class="view" id="view-home">
       <div class="hero">
-        <h1>함께 챙기는 여행 준비물</h1>
-        <p>조건을 고르면 준비물 목록이 만들어지고, 공유 코드로 친구들과 나눠 챙길 수 있어요.</p>
+        <div class="hero__text">
+          <p class="eyebrow">떠나기 전, 짐 싸는 재미</p>
+          <h1>캐리어를 하나씩<br>채워 볼까요?</h1>
+          <p class="hero__sub">여행 조건을 고르면 챙길 물건이 준비돼요. 초대 코드로 친구들과 짐을 나눠 챙기고, 다 챙기면 출발!</p>
+        </div>
+        <svg class="hero__art" viewBox="0 0 160 170" aria-hidden="true">
+          <rect x="58" y="8" width="44" height="26" rx="10" fill="none" stroke="#354052" stroke-width="6"/>
+          <rect x="18" y="28" width="124" height="128" rx="24" fill="#FFE8A3" stroke="#354052" stroke-width="6"/>
+          <line x1="52" y1="31" x2="52" y2="153" stroke="#354052" stroke-width="5" opacity="0.18"/>
+          <line x1="108" y1="31" x2="108" y2="153" stroke="#354052" stroke-width="5" opacity="0.18"/>
+          <circle cx="44" cy="70" r="15" fill="#BFE3F7" stroke="#354052" stroke-width="3"/>
+          <path d="M37 70 l14 -4 -3 4 3 4z" fill="#354052"/>
+          <rect x="88" y="96" width="38" height="24" rx="6" fill="#FFC7B5" stroke="#354052" stroke-width="3" transform="rotate(-10 107 108)"/>
+          <text x="107" y="112" font-size="10" font-weight="800" text-anchor="middle" fill="#354052" transform="rotate(-10 107 108)">GO!</text>
+          <polygon points="112,46 116,56 127,57 119,64 121,75 112,69 103,75 105,64 97,57 108,56" fill="#CFEEDC" stroke="#354052" stroke-width="3" stroke-linejoin="round"/>
+          <circle cx="44" cy="162" r="6" fill="#354052"/>
+          <circle cx="116" cy="162" r="6" fill="#354052"/>
+        </svg>
       </div>
+
       <div class="home-actions">
-        <button type="button" class="btn btn--primary btn--large" data-go="create">여행 만들기</button>
-        <button type="button" class="btn btn--large" data-go="join">코드로 참여</button>
+        <button type="button" class="btn btn--primary btn--large" data-go="create">✈️ 새 여행 떠나기</button>
+        <button type="button" class="btn btn--sky btn--large" data-go="join">🎫 초대 코드로 합류</button>
       </div>
+
+      <ol class="steps" aria-label="이렇게 진행돼요">
+        <li class="step"><span class="step__icon" aria-hidden="true">🗺️</span><strong>여행 고르기</strong><span>국내·해외, 기간, 계절</span></li>
+        <li class="step"><span class="step__icon" aria-hidden="true">👫</span><strong>크루 초대</strong><span>코드 하나로 합류</span></li>
+        <li class="step"><span class="step__icon" aria-hidden="true">🧳</span><strong>캐리어 채우기</strong><span>챙길수록 차올라요</span></li>
+      </ol>
+
       <div class="card" id="my-trips-card" hidden>
-        <h2 class="card__title">내가 들어간 여행</h2>
+        <h2 class="card__title">🎫 내 여행 티켓</h2>
         <ul class="my-trips" id="my-trips"></ul>
       </div>
     </section>
 
     <!-- 2. 여행 만들기 -->
     <section class="view" id="view-create" hidden>
-      <h1 class="view__title">여행 만들기</h1>
+      <div class="view-head">
+        <p class="eyebrow">새 여행 · 출발 준비</p>
+        <h1 class="view__title">어떤 여행을 떠나요?</h1>
+        <p class="view__sub">고른 조건에 맞춰 챙길 물건을 미리 담아 둘게요.</p>
+      </div>
       <form class="card form" id="create-form" novalidate>
         <fieldset class="choice">
-          <legend>국내/해외</legend>
+          <legend>어디로 가요?</legend>
           <div class="choice__options">
-            <label><input type="radio" name="region" value="domestic" required><span>국내</span></label>
-            <label><input type="radio" name="region" value="overseas"><span>해외</span></label>
+            <label><input type="radio" name="region" value="domestic" required><span><i aria-hidden="true">🗺️</i>국내</span></label>
+            <label><input type="radio" name="region" value="overseas"><span><i aria-hidden="true">🌏</i>해외</span></label>
           </div>
         </fieldset>
         <fieldset class="choice">
-          <legend>이동수단</legend>
+          <legend>무엇을 타고 가요?</legend>
           <div class="choice__options">
-            <label><input type="radio" name="transport" value="plane" required><span>비행기</span></label>
-            <label><input type="radio" name="transport" value="car"><span>자동차</span></label>
-            <label><input type="radio" name="transport" value="train"><span>기차</span></label>
+            <label><input type="radio" name="transport" value="plane" required><span><i aria-hidden="true">✈️</i>비행기</span></label>
+            <label><input type="radio" name="transport" value="car"><span><i aria-hidden="true">🚗</i>자동차</span></label>
+            <label><input type="radio" name="transport" value="train"><span><i aria-hidden="true">🚆</i>기차</span></label>
           </div>
         </fieldset>
         <fieldset class="choice">
-          <legend>기간</legend>
+          <legend>얼마나 머물러요?</legend>
           <div class="choice__options">
-            <label><input type="radio" name="duration" value="day" required><span>당일</span></label>
-            <label><input type="radio" name="duration" value="short"><span>1~2박</span></label>
-            <label><input type="radio" name="duration" value="long"><span>3박 이상</span></label>
+            <label><input type="radio" name="duration" value="day" required><span><i aria-hidden="true">☀️</i>당일</span></label>
+            <label><input type="radio" name="duration" value="short"><span><i aria-hidden="true">🌙</i>1~2박</span></label>
+            <label><input type="radio" name="duration" value="long"><span><i aria-hidden="true">🧭</i>3박 이상</span></label>
           </div>
         </fieldset>
         <fieldset class="choice">
-          <legend>계절</legend>
+          <legend>어느 계절이에요?</legend>
           <div class="choice__options">
-            <label><input type="radio" name="season" value="spring_fall" required><span>봄·가을</span></label>
-            <label><input type="radio" name="season" value="summer"><span>여름</span></label>
-            <label><input type="radio" name="season" value="winter"><span>겨울</span></label>
+            <label><input type="radio" name="season" value="spring_fall" required><span><i aria-hidden="true">🌸</i>봄·가을</span></label>
+            <label><input type="radio" name="season" value="summer"><span><i aria-hidden="true">🏖️</i>여름</span></label>
+            <label><input type="radio" name="season" value="winter"><span><i aria-hidden="true">❄️</i>겨울</span></label>
           </div>
         </fieldset>
         <label class="field">
-          <span class="field__label">내 닉네임</span>
-          <input type="text" name="nickname" maxlength="20" autocomplete="off" placeholder="1~20자" required>
+          <span class="field__label">여행에서 쓸 닉네임</span>
+          <input type="text" name="nickname" maxlength="20" autocomplete="off" placeholder="1~20자, 예: 짐싸기 장인" required>
         </label>
         <p class="form__error" id="create-error" hidden></p>
         <div class="form__actions">
-          <button type="button" class="btn" data-go="home">취소</button>
-          <button type="submit" class="btn btn--primary">여행 만들기</button>
+          <button type="button" class="btn" data-go="home">돌아가기</button>
+          <button type="submit" class="btn btn--primary">출발 준비 시작</button>
         </div>
       </form>
     </section>
 
     <!-- 3. 코드로 참여 -->
     <section class="view" id="view-join" hidden>
-      <h1 class="view__title">코드로 참여</h1>
+      <div class="view-head">
+        <p class="eyebrow">함께 떠나기</p>
+        <h1 class="view__title">초대 코드로 합류하기</h1>
+        <p class="view__sub">친구에게 받은 8자리 코드를 넣으면 같은 캐리어를 함께 채울 수 있어요.</p>
+      </div>
       <form class="card form" id="join-form" novalidate>
         <label class="field">
-          <span class="field__label">공유 코드</span>
+          <span class="field__label">초대 코드</span>
           <input type="text" name="code" class="input--code" maxlength="8" autocomplete="off"
                  autocapitalize="characters" spellcheck="false" placeholder="8자리 코드" required>
         </label>
         <label class="field">
-          <span class="field__label">내 닉네임</span>
+          <span class="field__label">여행에서 쓸 닉네임</span>
           <input type="text" name="nickname" maxlength="20" autocomplete="off" placeholder="1~20자" required>
         </label>
         <p class="form__error" id="join-error" hidden></p>
         <div class="form__actions">
-          <button type="button" class="btn" data-go="home">취소</button>
-          <button type="submit" class="btn btn--primary">입장하기</button>
+          <button type="button" class="btn" data-go="home">돌아가기</button>
+          <button type="submit" class="btn btn--primary">탑승하기</button>
         </div>
       </form>
     </section>
 
-    <!-- 4. 체크리스트 -->
+    <!-- 4. 짐싸기 화면 -->
     <section class="view" id="view-trip" hidden>
       <div class="trip-layout">
-        <!-- PC: 오른쪽 패널 / 휴대폰: 위쪽 -->
+        <!-- 휴대폰: 맨 위 / PC: 오른쪽 위 -->
         <aside class="trip-side">
-          <div class="card share">
-            <p class="trip-summary" id="trip-summary"></p>
-            <p class="share__label">공유 코드</p>
-            <p class="share__code" id="share-code"></p>
-            <button type="button" class="btn btn--small" id="copy-code">코드 복사</button>
-          </div>
-          <div class="card progress-card">
-            <div class="progress-head">
-              <span>팀 진행률</span>
-              <strong id="progress-rate">0%</strong>
+          <!-- 여행 티켓: 여행 조건(국내/해외, 이동수단, 기간, 계절)과 초대 코드 -->
+          <div class="card ticket">
+            <div class="ticket__head">
+              <span class="ticket__label">BOARDING PASS</span>
+              <span class="ticket__brand">PACK QUEST</span>
             </div>
-            <div class="bar" role="progressbar" aria-label="팀 진행률" aria-valuemin="0" aria-valuemax="100"
+            <div class="ticket__route">
+              <div class="ticket__place">
+                <span class="ticket__small">FROM</span>
+                <strong>우리 집</strong>
+              </div>
+              <span class="ticket__vehicle" id="ticket-transport" aria-hidden="true">✈️</span>
+              <div class="ticket__place ticket__place--to">
+                <span class="ticket__small">TO</span>
+                <strong id="ticket-dest">여행지</strong>
+              </div>
+            </div>
+            <p class="trip-summary" id="trip-summary"></p>
+            <div class="ticket__tear" aria-hidden="true"></div>
+            <div class="ticket__foot share">
+              <div>
+                <p class="share__label">초대 코드</p>
+                <p class="share__code" id="share-code"></p>
+              </div>
+              <button type="button" class="btn btn--sky btn--small" id="copy-code">코드 복사</button>
+            </div>
+          </div>
+
+          <!-- 캐리어: 팀 진행률만큼 차오른다 -->
+          <div class="card pack-card">
+            <div class="pack-visual">
+              <svg class="suitcase" id="suitcase" viewBox="0 0 120 146" aria-hidden="true">
+                <defs>
+                  <clipPath id="suitcase-inside"><rect x="19" y="29" width="82" height="98" rx="14"/></clipPath>
+                </defs>
+                <rect x="42" y="6" width="36" height="22" rx="9" fill="none" stroke="#354052" stroke-width="5"/>
+                <rect x="14" y="24" width="92" height="108" rx="19" fill="#FFFFFF" stroke="#354052" stroke-width="5"/>
+                <g clip-path="url(#suitcase-inside)">
+                  <g class="suitcase__fill">
+                    <rect x="19" y="29" width="82" height="20" fill="#FFC7B5"/>
+                    <rect x="19" y="49" width="82" height="20" fill="#FFE8A3"/>
+                    <rect x="19" y="69" width="82" height="20" fill="#BFE3F7"/>
+                    <rect x="19" y="89" width="82" height="20" fill="#CFEEDC"/>
+                    <rect x="19" y="109" width="82" height="18" fill="#FFD9A8"/>
+                  </g>
+                </g>
+                <line x1="42" y1="27" x2="42" y2="129" stroke="#354052" stroke-width="4" opacity="0.18"/>
+                <line x1="78" y1="27" x2="78" y2="129" stroke="#354052" stroke-width="4" opacity="0.18"/>
+                <circle cx="88" cy="46" r="9" fill="#FFC7B5" stroke="#354052" stroke-width="2.5"/>
+                <polygon points="30,98 33,105 41,105 35,110 37,118 30,113 23,118 25,110 19,105 27,105" fill="#FFE8A3" stroke="#354052" stroke-width="2.5" stroke-linejoin="round"/>
+                <circle cx="34" cy="138" r="5" fill="#354052"/>
+                <circle cx="86" cy="138" r="5" fill="#354052"/>
+              </svg>
+              <div class="pack-stats">
+                <span class="pack-stats__label">짐싸기 진행률</span>
+                <strong class="pack-stats__rate" id="progress-rate">0%</strong>
+                <p class="pack-stats__stage" id="pack-stage"></p>
+              </div>
+            </div>
+            <div class="bar bar--team" role="progressbar" aria-label="짐싸기 진행률" aria-valuemin="0" aria-valuemax="100"
                  id="progress-bar"><span class="bar__fill" id="progress-fill"></span></div>
             <p class="progress-sub" id="progress-sub"></p>
-            <ul class="members" id="member-list"></ul>
-          </div>
-          <div class="card progress-card progress-card--personal">
-            <div class="progress-head">
-              <span>내 짐</span>
-              <strong id="personal-rate">0%</strong>
-            </div>
-            <div class="bar" role="progressbar" aria-label="내 짐 진행률" aria-valuemin="0" aria-valuemax="100"
-                 id="personal-bar"><span class="bar__fill" id="personal-fill"></span></div>
-            <p class="progress-sub" id="personal-sub"></p>
-          </div>
-          <div class="card host-only" hidden>
-            <button type="button" class="btn btn--danger btn--block" id="delete-trip">여행 삭제</button>
+            <ul class="badges" id="badge-list" aria-label="분류별 준비 배지"></ul>
           </div>
         </aside>
 
@@ -143,23 +214,23 @@
           <p class="me-line" id="me-line"></p>
           <div class="tabs" role="tablist" aria-label="준비물 종류">
             <button type="button" class="tab" role="tab" id="tab-shared" aria-controls="panel-shared" aria-selected="true">
-              함께 챙기기 <span class="tab__count" id="shared-count"></span>
+              🧳 같이 챙길 짐 <span class="tab__count" id="shared-count"></span>
             </button>
             <button type="button" class="tab" role="tab" id="tab-personal" aria-controls="panel-personal" aria-selected="false">
-              내 짐 <span class="tab__count" id="personal-count"></span>
+              🎒 내 가방 <span class="tab__count" id="personal-count"></span>
             </button>
           </div>
 
           <!-- 공용 준비물: 서버에 저장, 담당자를 나눠 맡는다 -->
           <div role="tabpanel" id="panel-shared" aria-labelledby="tab-shared">
-            <p class="panel-note">한 명이 챙기면 되는 준비물이에요. 담당을 나눠 맡고 챙기면 체크해요.</p>
+            <p class="panel-note">한 명만 챙기면 되는 짐이에요. "내가 챙길게"로 맡고, 챙겼으면 동그라미를 눌러 캐리어에 넣어요.</p>
             <div id="item-groups"></div>
             <form class="card form add-item" id="add-item-form" novalidate>
-              <h2 class="card__title">함께 챙길 항목 추가</h2>
+              <h2 class="card__title">➕ 챙길 물건 추가</h2>
               <div class="add-item__row">
-                <input type="text" name="name" maxlength="50" autocomplete="off" placeholder="준비물 이름" required>
+                <input type="text" name="name" maxlength="50" autocomplete="off" placeholder="예: 보드게임, 멀티탭" required>
                 <select name="category" id="add-item-category" aria-label="분류"></select>
-                <button type="submit" class="btn btn--primary">추가</button>
+                <button type="submit" class="btn btn--primary">목록에 담기</button>
               </div>
               <p class="form__error" id="add-item-error" hidden></p>
             </form>
@@ -167,19 +238,41 @@
 
           <!-- 개인 준비물: 이 브라우저에만 저장, 팀원에게 보이지 않는다 -->
           <div role="tabpanel" id="panel-personal" aria-labelledby="tab-personal" hidden>
-            <p class="panel-note">각자 챙기는 준비물이에요. 체크는 이 기기에만 저장되고 팀원에게는 보이지 않아요.</p>
+            <p class="panel-note">각자 챙기는 짐이에요. 체크는 이 기기에만 저장되고 크루에게는 보이지 않아요.</p>
             <div id="personal-groups"></div>
             <form class="card form add-item" id="personal-add-form" novalidate>
-              <h2 class="card__title">내 짐 추가</h2>
+              <h2 class="card__title">➕ 내 가방에 넣을 물건</h2>
               <div class="add-item__row">
                 <input type="text" name="name" maxlength="50" autocomplete="off" placeholder="예: 렌즈 세척액" required>
                 <select name="category" id="personal-add-category" aria-label="분류"></select>
-                <button type="submit" class="btn btn--primary">추가</button>
+                <button type="submit" class="btn btn--primary">목록에 담기</button>
               </div>
               <p class="form__error" id="personal-add-error" hidden></p>
             </form>
             <button type="button" class="btn btn--ghost btn--small restore" id="personal-restore" hidden></button>
           </div>
+        </div>
+
+        <!-- 휴대폰: 목록 아래 / PC: 오른쪽 아래 -->
+        <aside class="trip-extra">
+          <div class="card crew-card">
+            <h2 class="card__title">👫 함께 떠나는 크루</h2>
+            <ul class="members" id="member-list"></ul>
+          </div>
+          <div class="card mybag-card">
+            <div class="progress-head">
+              <span>🎒 내 가방</span>
+              <strong id="personal-rate">0%</strong>
+            </div>
+            <div class="bar bar--personal" role="progressbar" aria-label="내 가방 진행률" aria-valuemin="0" aria-valuemax="100"
+                 id="personal-bar"><span class="bar__fill" id="personal-fill"></span></div>
+            <p class="progress-sub" id="personal-sub"></p>
+          </div>
+        </aside>
+
+        <div class="trip-danger" id="trip-danger" hidden>
+          <button type="button" class="btn btn--danger btn--block" id="delete-trip">여행 삭제</button>
+          <p class="trip-danger__note">삭제하면 크루와 짐 목록이 모두 사라지고 되돌릴 수 없어요. (주최자만 보여요)</p>
         </div>
       </div>
     </section>
@@ -187,32 +280,34 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-  <!-- 준비물 한 줄 -->
+  <!-- 같이 챙길 짐 한 줄 -->
   <template id="item-template">
     <li class="item">
       <label class="item__check">
         <input type="checkbox" class="item__done">
         <span class="item__name"></span>
+        <span class="item__packed" aria-hidden="true">캐리어에 쏙!</span>
       </label>
       <div class="item__meta">
         <span class="item__assignee"></span>
-        <button type="button" class="btn btn--small item__claim">내가 맡기</button>
-        <button type="button" class="btn btn--small btn--ghost item__release">맡기 취소</button>
-        <select class="item__assign host-only" aria-label="담당자 지정" hidden></select>
-        <button type="button" class="btn btn--small btn--ghost item__delete host-only" aria-label="항목 삭제" hidden>삭제</button>
+        <button type="button" class="btn btn--small item__claim">🙋 내가 챙길게</button>
+        <button type="button" class="btn btn--small btn--ghost item__release">내려놓기</button>
+        <select class="item__assign host-only" aria-label="챙길 사람 지정" hidden></select>
+        <button type="button" class="btn btn--small btn--ghost item__delete host-only" aria-label="항목 빼기" hidden>빼기</button>
       </div>
     </li>
   </template>
 
-  <!-- 내 짐 한 줄 -->
+  <!-- 내 가방 한 줄 -->
   <template id="personal-template">
     <li class="item">
       <label class="item__check">
         <input type="checkbox" class="item__done">
         <span class="item__name"></span>
+        <span class="item__packed" aria-hidden="true">가방에 쏙!</span>
       </label>
       <div class="item__meta">
-        <span class="item__tag" hidden>직접 추가</span>
+        <span class="item__tag" hidden>내가 추가</span>
         <button type="button" class="btn btn--small btn--ghost personal__remove"></button>
       </div>
     </li>
