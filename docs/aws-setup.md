@@ -24,6 +24,9 @@
 - Backend EC2 Role: packquest-ec2-backend-role — AmazonSSMManagedInstanceCore + Parameter Store `/packquest/db-password` 읽기(GetParameter) 하나
 - Database EC2 Role: packquest-ec2-db-role — AmazonSSMManagedInstanceCore만
 
+## EC2
+- Backend: packquest-backend (`i-033c073cd3d240ab7`) — Ubuntu 24.04 LTS, t3.small, packquest-private-app, 프라이빗 IP 10.0.1.154 (`ip-10-0-1-154.ap-northeast-2.compute.internal`), 공인 IP·키 페어 없음, sg-app, packquest-ec2-backend-role, IMDSv2 필수, EBS 8GB gp3 암호화
+
 ## 진행 상황
 - 1일 차 (10/19): 완료 — VPC, 인터넷 게이트웨이, 서브넷 3개, 라우팅 테이블 2개, NAT Gateway, 보안 그룹 2개, EC2용 IAM 역할 2개. 모두 생성 후 조회로 설정값 확인함. NAT Gateway는 이때부터 과금 중.
-- 2일 차 (10/20): 예정 — Backend 서버 생성(B에게 전달) → S3 버킷 생성(C에게 전달) → DB 서버 생성 → MariaDB 설치·설정 → Parameter Store에 DB 비밀번호 저장 → 하루 끝에 Backend에서 DB 접속 확인.
+- 2일 차 (10/20): 진행 중 — Backend 서버 생성 완료(상태 검사 2/2, SSM Online 확인) → B에게 전달 → S3 버킷 생성(C에게 전달) → DB 서버 생성 → MariaDB 설치·설정 → Parameter Store에 DB 비밀번호 저장 → 하루 끝에 Backend에서 DB 접속 확인.
