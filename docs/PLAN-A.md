@@ -101,7 +101,7 @@ Backend 역할에 붙일 인라인 정책(파라미터 **하나만**):
 ### 단계 11 — MariaDB 설치·설정 (DB 서버 SSM 세션)
 - [x] 10/20 완료(사용자 확인): MariaDB 10.11.14 active·enabled, bind-address `10.0.2.237` → `10.0.2.237:3306` LISTEN, 보안 초기화(root localhost만·익명 없음), DB `packquest` + 테이블 3개, `packquest_app@10.0.1.154` S/I/U/D만
 - 진행 중 겪은 일(재발 방지):
-  - 처음 11-A~F를 **작업용 컴퓨터(WSL)** 에서 실행함 → Backend에서 `Connection refused`. 실제 DB 서버에서 다시 함. **블록마다 `hostname -I`가 `10.0.2.237`인지 먼저 확인**한다. (WSL에 설치된 MariaDB 처리: 결정 대기)
+  - 처음 11-A~F를 **작업용 컴퓨터(WSL)** 에서 실행함 → Backend에서 `Connection refused`. 실제 DB 서버에서 다시 함. **블록마다 `hostname -I`가 `10.0.2.237`인지 먼저 확인**한다. (WSL에 설치된 MariaDB 서버는 10/20 삭제 확인: 패키지·데이터·설정·3306 포트 없음)
   - SSM 세션 기본 셸은 `sh`라서 `read -s`가 없다 → `stty -echo; read PW; stty echo` 사용
   - 비밀번호를 명령 자리에 잘못 넣어 채팅에 노출됨 → Parameter Store 값 교체(현재 **버전 3**), WSL 명령 기록 정리. 노출된 값은 어떤 DB 계정에도 남아 있지 않다
 ```bash
@@ -156,7 +156,7 @@ sudo apt install -y mariadb-client
 mariadb -h <DB_PRIVATE_IP> -u packquest_app -p packquest -e "SHOW TABLES;"   # 성공해야 함
 mariadb -h <DB_PRIVATE_IP> -u root -p                                       # 실패해야 함
 ```
-- [ ] 앱 계정 접속 성공 / root 원격 접속 실패 — 앱 계정 접속 성공은 10/20 확인(Backend에서 pymysql `DB-OK`). **root 원격 접속 실패는 미확인**
+- [x] 앱 계정 접속 성공 / root 원격 접속 실패 — 10/20 확인: Backend에서 pymysql `DB-OK`, Backend에서 `mariadb -h 10.0.2.237 -u root` → `ERROR 1045 Access denied for user 'root'@'ip-10-0-1-154...'`
 - [ ] B의 `/api/health` 뼈대가 `curl http://<BACKEND_IP>:8000/api/health`로 응답 (B 담당, 나는 확인만)
 - [ ] C의 뼈대 화면이 버킷에 보임 (C 담당, 나는 확인만)
 - [ ] 기록표 2일 차 칸 채우기
