@@ -1,12 +1,12 @@
 # PACK QUEST 프로젝트 작업 지침
 
 ## 시작 전 확인
-- `docs/PRD.md`와 `docs/PLAN-A.md`를 먼저 읽는다.
+- `infra/PRD-v4.5.md`와 `infra/PLAN-A.md`를 먼저 읽는다.
 - 문서가 없거나 비어 있으면 임의로 요구사항을 만들지 말고 알린다.
 - 사용자가 지정한 작업 하나만 진행한다. 작업은 PLAN의 단계 번호(예: 단계 11) 또는 기능 ID(예: FR-03)로 지정한다. 지정이 불명확하면 먼저 확인한다.
 - 문서마다 맡는 내용이 다르다.
   - PRD: 제품 요구사항과 고정 규칙
-  - PLAN(`docs/PLAN-A.md`): A 역할(인프라·MariaDB)의 구현 순서와 확인 결과
+  - PLAN(`infra/PLAN-A.md`): A 역할(인프라·MariaDB)의 구현 순서와 확인 결과
   - B·C 절차: `backend/CHECKLIST.md`, `backend/deploy/DEPLOY.md`, `frontend/CHECKLIST.md`
   - 이 파일: 작업 규칙
 - 문서 간 요구가 충돌하면 충돌 항목을 설명하고 확인한 뒤 진행한다.
