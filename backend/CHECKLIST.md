@@ -82,13 +82,12 @@
 
 ### 먼저 필요한 것 (A·C)
 
-- [ ] C(저장소 주인 bsy-100): Backend 서버의 읽기 전용 Deploy key 등록 (`DEPLOY.md` 3단계에서 B가 공개키를 전달)
 - [ ] A: CloudFront VPC 오리진, `/api/*` 동작(원본 요청 정책 `Managed-AllViewerAndCloudFrontHeaders-2022-06`, 사용자 지정 오류 응답 없음)
 - [ ] C: 화면 S3 업로드
 
 ### 내 할 일
 
-- [ ] `DEPLOY.md` 순서대로 배포: 패키지 → Deploy key → 코드 → 설정 파일 → 연결 확인 → systemd
+- [ ] `DEPLOY.md` 순서대로 배포: 패키지 → 코드(https, 공개 저장소) → 설정 파일 → 연결 확인 → systemd
 - [ ] 서버 안에서 `python3 tests/smoke_test.py http://127.0.0.1:8000/api` 통과
 - [ ] CloudFront 연결 후 `python3 tests/smoke_test.py https://<CloudFront 도메인>/api` 통과
 - [ ] C와 화면·API 연동 확인: 여행 만들기 → 참여 → 맡기 → 체크 → 진행률 → 삭제
