@@ -166,27 +166,27 @@ mariadb -h <DB_PRIVATE_IP> -u root -p                                       # �
 ## 3일 차 — 10/21(수) · CloudFront와 통합 (단계 15~16)
 
 ### 단계 15 — CloudFront 설정 순서
-1. [ ] **사전 확인**: Backend 서버 실행 중, uvicorn `0.0.0.0:8000`에서 응답 (`curl http://<BACKEND_IP>:8000/api/health`)
-2. [ ] (필요 시) 연결 테스트용으로 `sg-app`에 인바운드 TCP 8000, 소스 = 관리형 접두사 목록 `com.amazonaws.global.cloudfront.origin-facing` **임시** 추가
-3. [ ] CloudFront 콘솔 → **VPC 오리진** 생성 `packquest-vpc-origin`: 원본 ARN = Backend EC2, HTTP, 포트 8000 → 상태 **Deployed** 대기(최대 15분, 그동안 설정값 기록)
-4. [ ] 배포 `packquest-cf` 생성, 원본 2개
+1. [x] **사전 확인**: Backend 서버 실행 중, uvicorn `0.0.0.0:8000`에서 응답 (`curl http://<BACKEND_IP>:8000/api/health`) — 10/20 확인(서비스 active·`0.0.0.0:8000`·health 200은 사용자 확인, IGW attached·앱 서브넷 여유 IP 250·기존 배포 없음은 조회 확인)
+2. [x] (건너뜀 — 10/20, 서버 안 확인으로 대신하고 임시 규칙을 열지 않음) (필요 시) 연결 테스트용으로 `sg-app`에 인바운드 TCP 8000, 소스 = 관리형 접두사 목록 `com.amazonaws.global.cloudfront.origin-facing` **임시** 추가
+3. [x] CloudFront 콘솔 → **VPC 오리진** 생성 `packquest-vpc-origin`: 원본 ARN = Backend EC2, HTTP, 포트 8000 → 상태 **Deployed** 대기(최대 15분, 그동안 설정값 기록) — 10/20 CLI 생성 `vo_C1Fa5wzoZhSE0kgfSYx1Fx`(http-only, 8000), 15:09 **Deployed** 확인, 서비스 관리형 SG `CloudFront-VPCOrigins-Service-SG`(sg-01f21584ac34ee388) 자동 생성 확인
+4. [x] 배포 `packquest-cf` 생성, 원본 2개 — 10/20 CLI 생성 `E1JDVTXZDF4P90`, 도메인 `d1ra4yni7dggze.cloudfront.net`, OAC `packquest-oac`(E10COFUJ81ZT0M), 설정 조회 확인
    - S3 원본: **OAC** 사용 → **기본 동작(`*`)**, 기본 루트 객체 `index.html`
    - VPC 오리진: 원본 도메인 = 인스턴스의 **프라이빗 IP DNS 이름**(`ip-10-0-1-xx.ap-northeast-2.compute.internal`), HTTP/8000
-5. [ ] 콘솔이 보여주는 **OAC 버킷 정책을 복사해 S3 버킷 정책에 붙여 넣기** (안 하면 화면 403)
-6. [ ] 동작 `/api/*` → VPC 오리진
+5. [x] 콘솔이 보여주는 **OAC 버킷 정책을 복사해 S3 버킷 정책에 붙여 넣기** (안 하면 화면 403) — 10/20 CLI 적용(같은 형식, GetObject만, SourceArn=E1JDVTXZDF4P90). 조회 확인: IsPublic False, 퍼블릭 차단 4개 유지, S3 직접 URL 403, CloudFront `/` 200
+6. [x] 동작 `/api/*` → VPC 오리진 (10/20 조회 확인: CachingDisabled 4135ea2d…, AllViewerAndCloudFrontHeaders-2022-06 33f36d7e…, 메서드 7개)
    - 캐시 정책: `Managed-CachingDisabled`
    - 원본 요청 정책: `Managed-AllViewerAndCloudFrontHeaders-2022-06`
    - 허용 메서드: GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE 전부
-7. [ ] **사용자 지정 오류 응답(Error pages)은 설정하지 않는다** (API JSON 오류가 index.html로 바뀜)
-8. [ ] `sg-app` 허용 규칙 교체: 인바운드 TCP 8000, 소스 = **`CloudFront-VPCOrigins-Service-SG`** (서비스 관리형 SG) → 접두사 목록 임시 규칙 **삭제**. 서비스 관리형 SG는 수정하지 않고, 같은 이름 패턴으로 SG를 직접 만들지 않는다.
+7. [x] **사용자 지정 오류 응답(Error pages)은 설정하지 않는다** (10/20 조회 확인: 0개) (API JSON 오류가 index.html로 바뀜)
+8. [x] `sg-app` 허용 규칙 교체: 인바운드 TCP 8000, 소스 = **`CloudFront-VPCOrigins-Service-SG`** (서비스 관리형 SG) → 접두사 목록 임시 규칙 **삭제**. 서비스 관리형 SG는 수정하지 않고, 같은 이름 패턴으로 SG를 직접 만들지 않는다. — 10/20 CLI 추가 `sgr-06aca535c28be0e66`(TCP 8000 ← sg-01f21584ac34ee388). 임시 접두사 목록 규칙은 만들지 않았으므로 삭제할 것 없음. 조회 확인: sg-app 인바운드는 이 규칙 1개뿐
 9. [ ] C에게 배포 ID·도메인 전달 (화면 변경 후 C가 캐시 무효화)
 
 ### 확인
-- [ ] `https://<dxxxx>.cloudfront.net/` → 화면 열림 (403 아님)
-- [ ] `https://<dxxxx>.cloudfront.net/api/health` → JSON 응답
-- [ ] 없는 코드로 참여 → HTML이 아닌 **JSON 오류**
-- [ ] B와 함께 서버 로그에서 `X-Pack-Token`, `CloudFront-Viewer-Address`가 도착하는지 확인 (IPv6 형식도 이때 확인)
-- [ ] S3 객체 URL로 직접 접근 → 차단(AccessDenied)
+- [x] `https://<dxxxx>.cloudfront.net/` → 화면 열림 (403 아님) — 10/20 200, `<title>PACK QUEST</title>`, http→https 301
+- [x] `https://<dxxxx>.cloudfront.net/api/health` → JSON 응답 — 10/20 `{"status":"ok"}` 200 application/json
+- [x] 없는 코드로 참여 → HTML이 아닌 **JSON 오류** — 10/20 `POST /api/trips/ZZZZZZZZ/members` → 404 `TRIP_NOT_FOUND` application/json
+- [ ] B와 함께 서버 로그에서 `X-Pack-Token`, `CloudFront-Viewer-Address`가 도착하는지 확인 (IPv6 형식도 이때 확인) — `X-Pack-Token` 도착은 10/20 간접 확인(헤더 없으면 TOKEN_MISSING, 잘못된 값이면 TOKEN_INVALID로 응답이 달라짐). `CloudFront-Viewer-Address`·IPv6 형식은 B와 서버 로그로 **미확인**
+- [x] S3 객체 URL로 직접 접근 → 차단(AccessDenied) — 10/20 403
 
 ### 단계 16 — 전체 흐름 (A·B·C)
 - [ ] CloudFront 도메인에서 여행 생성 → 참여 → 체크 → 진행률 → 삭제 끝까지
@@ -292,7 +292,7 @@ sudo mariadb -e "DROP DATABASE packquest_restore_test;"
 | RT 퍼블릭 | packquest-rt-public | 0.0.0.0/0 → IGW, packquest-public 연결 | rtb-0dad1979bc0ad83c6 (10/19) |
 | RT 프라이빗 | packquest-rt-private | 0.0.0.0/0 → NAT, 앱·DB 서브넷 연결 | rtb-0b6b2dc39c3d1b903 (10/19) |
 | NAT Gateway | packquest-nat | packquest-public, EIP 52.79.204.224 (packquest-nat-eip, eipalloc-0700d56639835f43c), 프라이빗 IP 10.0.0.25 | nat-08d3c865dca521a96 (10/19, 과금 시작) |
-| sg-app | packquest-sg-app | 8000 ← CloudFront 서비스 관리형 SG(단계 15에서 추가, 현재 인바운드 없음) | sg-09c3d767d5d3fae47 (10/19) |
+| sg-app | packquest-sg-app | 8000 ← CloudFront-VPCOrigins-Service-SG(sg-01f21584ac34ee388), 규칙 sgr-06aca535c28be0e66 (10/20 추가) | sg-09c3d767d5d3fae47 (10/19) |
 | sg-db | packquest-sg-db | 3306 ← sg-app | sg-0969c421fc57972b3 (10/19) |
 | IAM 역할(DB) | packquest-ec2-db-role | SSMManagedInstanceCore, 인스턴스 프로파일 동명 | arn:aws:iam::<ACCOUNT_ID>:role/packquest-ec2-db-role (10/19) |
 | IAM 역할(Backend) | packquest-ec2-backend-role | SSMManagedInstanceCore + 인라인 `packquest-read-db-password`(GetParameter 1개), 인스턴스 프로파일 동명 | arn:aws:iam::<ACCOUNT_ID>:role/packquest-ec2-backend-role (10/19) |
@@ -300,9 +300,9 @@ sudo mariadb -e "DROP DATABASE packquest_restore_test;"
 | DB EC2 | packquest-db | Ubuntu 24.04 LTS (ami-0e1eeb87102d64f40), t3.small, packquest-private-db, 프라이빗 IP 10.0.2.237 (ip-10-0-2-237.ap-northeast-2.compute.internal), 공인 IP·키 페어 없음, sg-db, packquest-ec2-db-role, IMDSv2 필수, EBS 8GB gp3 암호화(vol-03ade82015a4b056f) | i-06c3000b9c697fd63 (10/20) |
 | MariaDB | DB `packquest` | 10.11.14, bind-address 10.0.2.237, utf8mb4_unicode_ci, 테이블 trips·members·items(CASCADE / assignee SET NULL), 앱 계정 `packquest_app@10.0.1.154`, root localhost만 | 권한 S/I/U/D (10/20) |
 | Parameter | /packquest/db-password | SecureString, aws/ssm 키, Standard, 영문·숫자 32자. **단계 11의 CREATE USER에 이 값을 써야 함** | 버전 3 (10/20, 단계 11보다 먼저 생성, 노출 후 교체) |
-| S3 버킷 | packquest-web-1b07b2 | ap-northeast-2, 퍼블릭 액세스 차단 4개 모두 켬, 정적 웹 호스팅 없음, 객체 소유권 BucketOwnerEnforced(ACL 비활성), 기본 암호화 SSE-S3, 버킷 정책 없음(단계 15에서 OAC 정책 추가) | arn:aws:s3:::packquest-web-1b07b2 (10/20) |
-| VPC 오리진 | packquest-vpc-origin | HTTP 8000, 프라이빗 IP DNS | |
-| CloudFront | packquest-cf | 기본→S3(OAC), `/api/*`→VPC 오리진, CachingDisabled, AllViewerAndCloudFrontHeaders-2022-06, Error pages 없음 | 도메인 ___ |
+| S3 버킷 | packquest-web-1b07b2 | ap-northeast-2, 퍼블릭 액세스 차단 4개 모두 켬, 정적 웹 호스팅 없음, 객체 소유권 BucketOwnerEnforced(ACL 비활성), 기본 암호화 SSE-S3, 버킷 정책 = OAC 허용 1개(cloudfront.amazonaws.com, GetObject, SourceArn=packquest-cf) | arn:aws:s3:::packquest-web-1b07b2 (10/20) |
+| VPC 오리진 | packquest-vpc-origin | 원본 Backend EC2(i-033c073cd3d240ab7), http-only, HTTP 8000 | vo_C1Fa5wzoZhSE0kgfSYx1Fx (10/20) |
+| CloudFront | packquest-cf | 기본→S3(OAC `packquest-oac` E10COFUJ81ZT0M, CachingOptimized), `/api/*`→VPC 오리진(CachingDisabled, AllViewerAndCloudFrontHeaders-2022-06, 메서드 7개), 루트 객체 index.html, Error pages 없음, HTTPS 리디렉션, IPv6 켬 | E1JDVTXZDF4P90 / d1ra4yni7dggze.cloudfront.net (10/20) |
 | 백업 | packquest_YYYY-MM-DD.sql / packquest-db-snap-1022 | 복원 확인 ☐ | |
 
 ---

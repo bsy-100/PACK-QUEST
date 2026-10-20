@@ -17,7 +17,7 @@
   - packquest-rt-private (`rtb-0b6b2dc39c3d1b903`): 0.0.0.0/0 → NAT, 앱·DB 서브넷 연결
 
 ## Security Groups
-- sg-app: packquest-sg-app (`sg-09c3d767d5d3fae47`) — 인바운드 없음(3일 차에 CloudFront VPC 오리진에서 오는 8000번만 추가 예정)
+- sg-app: packquest-sg-app (`sg-09c3d767d5d3fae47`) — 인바운드 TCP 8000, 소스 CloudFront-VPCOrigins-Service-SG(`sg-01f21584ac34ee388`)만
 - sg-db: packquest-sg-db (`sg-0969c421fc57972b3`) — 인바운드 TCP 3306, 소스 sg-app만
 
 ## IAM Roles
@@ -34,6 +34,14 @@
 ## Parameter Store
 - `/packquest/db-password` — SecureString(aws/ssm 키), 버전 3. 단계 11 전에 먼저 만듦 → MariaDB 앱 계정 생성 시 이 값을 그대로 사용
 
+## CloudFront
+- 배포: packquest-cf (`E1JDVTXZDF4P90`) — https://d1ra4yni7dggze.cloudfront.net
+  - 기본 동작 → S3 `packquest-web-1b07b2`(OAC `packquest-oac` E10COFUJ81ZT0M, Managed-CachingOptimized), 루트 객체 index.html
+  - `/api/*` → VPC 오리진 `packquest-vpc-origin`(`vo_C1Fa5wzoZhSE0kgfSYx1Fx`, Backend EC2 HTTP 8000), Managed-CachingDisabled + Managed-AllViewerAndCloudFrontHeaders-2022-06, 메서드 7개
+  - 사용자 지정 오류 응답 없음, HTTPS 리디렉션, IPv6 켬
+- S3 버킷 정책: OAC 허용 1개(GetObject, SourceArn=packquest-cf)
+
 ## 진행 상황
 - 1일 차 (10/19): 완료 — VPC, 인터넷 게이트웨이, 서브넷 3개, 라우팅 테이블 2개, NAT Gateway, 보안 그룹 2개, EC2용 IAM 역할 2개. 모두 생성 후 조회로 설정값 확인함. NAT Gateway는 이때부터 과금 중.
 - 2일 차 (10/20): 진행 중 — Backend 서버 생성 완료(상태 검사 2/2, SSM Online 확인) → B에게 전달 → S3 버킷 생성 완료(packquest-web-1b07b2) → C에게 전달·뼈대 화면 업로드 확인 → Parameter Store 비밀번호 생성 완료(단계 12 먼저) → DB 서버 생성 완료(10.0.2.237, 상태 검사 2/2, SSM Online) → MariaDB 설치·설정 완료(10.11.14, bind 10.0.2.237, 테이블 3개, 앱 계정 packquest_app@10.0.1.154) → Backend에서 앱 계정 접속 성공(DB-OK) → 하루 끝에 Backend에서 DB 접속 확인.
+- 3일 차 (10/20 저녁 선행): VPC 오리진 → OAC → 배포 → S3 버킷 정책 → sg-app 규칙 완료. CloudFront에서 화면 200, /api/health 200 JSON, 없는 코드 404 JSON, S3 직접 접근 403 확인.
