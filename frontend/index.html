@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PACK QUEST</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a href="./" class="brand" id="brand-link">PACK QUEST</a>
+    <span class="mock-badge" id="mock-badge" hidden>임시 데이터</span>
+  </header>
+
+  <!-- 오류 안내: API 실패 시 메시지와 재시도 버튼 -->
+  <div class="error-banner" id="error-banner" role="alert" hidden>
+    <span class="error-banner__msg" id="error-message"></span>
+    <button type="button" class="btn btn--small" id="error-retry">다시 시도</button>
+    <button type="button" class="btn btn--ghost btn--small" id="error-close" aria-label="닫기">닫기</button>
+  </div>
+
+  <main class="container">
+    <!-- 1. 시작 -->
+    <section class="view" id="view-home">
+      <div class="hero">
+        <h1>함께 챙기는 여행 준비물</h1>
+        <p>조건을 고르면 준비물 목록이 만들어지고, 공유 코드로 친구들과 나눠 챙길 수 있어요.</p>
+      </div>
+      <div class="home-actions">
+        <button type="button" class="btn btn--primary btn--large" data-go="create">여행 만들기</button>
+        <button type="button" class="btn btn--large" data-go="join">코드로 참여</button>
+      </div>
+      <div class="card" id="my-trips-card" hidden>
+        <h2 class="card__title">내가 들어간 여행</h2>
+        <ul class="my-trips" id="my-trips"></ul>
+      </div>
+    </section>
+
+    <!-- 2. 여행 만들기 -->
+    <section class="view" id="view-create" hidden>
+      <h1 class="view__title">여행 만들기</h1>
+      <form class="card form" id="create-form" novalidate>
+        <fieldset class="choice">
+          <legend>국내/해외</legend>
+          <div class="choice__options">
+            <label><input type="radio" name="region" value="domestic" required><span>국내</span></label>
+            <label><input type="radio" name="region" value="overseas"><span>해외</span></label>
+          </div>
+        </fieldset>
+        <fieldset class="choice">
+          <legend>이동수단</legend>
+          <div class="choice__options">
+            <label><input type="radio" name="transport" value="plane" required><span>비행기</span></label>
+            <label><input type="radio" name="transport" value="car"><span>자동차</span></label>
+            <label><input type="radio" name="transport" value="train"><span>기차</span></label>
+          </div>
+        </fieldset>
+        <fieldset class="choice">
+          <legend>기간</legend>
+          <div class="choice__options">
+            <label><input type="radio" name="duration" value="day" required><span>당일</span></label>
+            <label><input type="radio" name="duration" value="short"><span>1~2박</span></label>
+            <label><input type="radio" name="duration" value="long"><span>3박 이상</span></label>
+          </div>
+        </fieldset>
+        <fieldset class="choice">
+          <legend>계절</legend>
+          <div class="choice__options">
+            <label><input type="radio" name="season" value="spring_fall" required><span>봄·가을</span></label>
+            <label><input type="radio" name="season" value="summer"><span>여름</span></label>
+            <label><input type="radio" name="season" value="winter"><span>겨울</span></label>
+          </div>
+        </fieldset>
+        <label class="field">
+          <span class="field__label">내 닉네임</span>
+          <input type="text" name="nickname" maxlength="20" autocomplete="off" placeholder="1~20자" required>
+        </label>
+        <p class="form__error" id="create-error" hidden></p>
+        <div class="form__actions">
+          <button type="button" class="btn" data-go="home">취소</button>
+          <button type="submit" class="btn btn--primary">여행 만들기</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- 3. 코드로 참여 -->
+    <section class="view" id="view-join" hidden>
+      <h1 class="view__title">코드로 참여</h1>
+      <form class="card form" id="join-form" novalidate>
+        <label class="field">
+          <span class="field__label">공유 코드</span>
+          <input type="text" name="code" class="input--code" maxlength="8" autocomplete="off"
+                 autocapitalize="characters" spellcheck="false" placeholder="8자리 코드" required>
+        </label>
+        <label class="field">
+          <span class="field__label">내 닉네임</span>
+          <input type="text" name="nickname" maxlength="20" autocomplete="off" placeholder="1~20자" required>
+        </label>
+        <p class="form__error" id="join-error" hidden></p>
+        <div class="form__actions">
+          <button type="button" class="btn" data-go="home">취소</button>
+          <button type="submit" class="btn btn--primary">입장하기</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- 4. 체크리스트 -->
+    <section class="view" id="view-trip" hidden>
+      <div class="trip-layout">
+        <!-- PC: 오른쪽 패널 / 휴대폰: 위쪽 -->
+        <aside class="trip-side">
+          <div class="card share">
+            <p class="trip-summary" id="trip-summary"></p>
+            <p class="share__label">공유 코드</p>
+            <p class="share__code" id="share-code"></p>
+            <button type="button" class="btn btn--small" id="copy-code">코드 복사</button>
+          </div>
+          <div class="card progress-card">
+            <div class="progress-head">
+              <span>팀 진행률</span>
+              <strong id="progress-rate">0%</strong>
+            </div>
+            <div class="bar" role="progressbar" aria-label="팀 진행률" aria-valuemin="0" aria-valuemax="100"
+                 id="progress-bar"><span class="bar__fill" id="progress-fill"></span></div>
+            <p class="progress-sub" id="progress-sub"></p>
+            <ul class="members" id="member-list"></ul>
+          </div>
+          <div class="card progress-card progress-card--personal">
+            <div class="progress-head">
+              <span>내 짐</span>
+              <strong id="personal-rate">0%</strong>
+            </div>
+            <div class="bar" role="progressbar" aria-label="내 짐 진행률" aria-valuemin="0" aria-valuemax="100"
+                 id="personal-bar"><span class="bar__fill" id="personal-fill"></span></div>
+            <p class="progress-sub" id="personal-sub"></p>
+          </div>
+          <div class="card host-only" hidden>
+            <button type="button" class="btn btn--danger btn--block" id="delete-trip">여행 삭제</button>
+          </div>
+        </aside>
+
+        <div class="trip-main">
+          <p class="me-line" id="me-line"></p>
+          <div class="tabs" role="tablist" aria-label="준비물 종류">
+            <button type="button" class="tab" role="tab" id="tab-shared" aria-controls="panel-shared" aria-selected="true">
+              함께 챙기기 <span class="tab__count" id="shared-count"></span>
+            </button>
+            <button type="button" class="tab" role="tab" id="tab-personal" aria-controls="panel-personal" aria-selected="false">
+              내 짐 <span class="tab__count" id="personal-count"></span>
+            </button>
+          </div>
+
+          <!-- 공용 준비물: 서버에 저장, 담당자를 나눠 맡는다 -->
+          <div role="tabpanel" id="panel-shared" aria-labelledby="tab-shared">
+            <p class="panel-note">한 명이 챙기면 되는 준비물이에요. 담당을 나눠 맡고 챙기면 체크해요.</p>
+            <div id="item-groups"></div>
+            <form class="card form add-item" id="add-item-form" novalidate>
+              <h2 class="card__title">함께 챙길 항목 추가</h2>
+              <div class="add-item__row">
+                <input type="text" name="name" maxlength="50" autocomplete="off" placeholder="준비물 이름" required>
+                <select name="category" id="add-item-category" aria-label="분류"></select>
+                <button type="submit" class="btn btn--primary">추가</button>
+              </div>
+              <p class="form__error" id="add-item-error" hidden></p>
+            </form>
+          </div>
+
+          <!-- 개인 준비물: 이 브라우저에만 저장, 팀원에게 보이지 않는다 -->
+          <div role="tabpanel" id="panel-personal" aria-labelledby="tab-personal" hidden>
+            <p class="panel-note">각자 챙기는 준비물이에요. 체크는 이 기기에만 저장되고 팀원에게는 보이지 않아요.</p>
+            <div id="personal-groups"></div>
+            <form class="card form add-item" id="personal-add-form" novalidate>
+              <h2 class="card__title">내 짐 추가</h2>
+              <div class="add-item__row">
+                <input type="text" name="name" maxlength="50" autocomplete="off" placeholder="예: 렌즈 세척액" required>
+                <select name="category" id="personal-add-category" aria-label="분류"></select>
+                <button type="submit" class="btn btn--primary">추가</button>
+              </div>
+              <p class="form__error" id="personal-add-error" hidden></p>
+            </form>
+            <button type="button" class="btn btn--ghost btn--small restore" id="personal-restore" hidden></button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <!-- 준비물 한 줄 -->
+  <template id="item-template">
+    <li class="item">
+      <label class="item__check">
+        <input type="checkbox" class="item__done">
+        <span class="item__name"></span>
+      </label>
+      <div class="item__meta">
+        <span class="item__assignee"></span>
+        <button type="button" class="btn btn--small item__claim">내가 맡기</button>
+        <button type="button" class="btn btn--small btn--ghost item__release">맡기 취소</button>
+        <select class="item__assign host-only" aria-label="담당자 지정" hidden></select>
+        <button type="button" class="btn btn--small btn--ghost item__delete host-only" aria-label="항목 삭제" hidden>삭제</button>
+      </div>
+    </li>
+  </template>
+
+  <!-- 내 짐 한 줄 -->
+  <template id="personal-template">
+    <li class="item">
+      <label class="item__check">
+        <input type="checkbox" class="item__done">
+        <span class="item__name"></span>
+      </label>
+      <div class="item__meta">
+        <span class="item__tag" hidden>직접 추가</span>
+        <button type="button" class="btn btn--small btn--ghost personal__remove"></button>
+      </div>
+    </li>
+  </template>
+
+  <script src="js/constants.js" defer></script>
+  <script src="js/personal.js" defer></script>
+  <script src="js/api.js" defer></script>
+  <script src="js/mock.js" defer></script>
+  <script src="js/app.js" defer></script>
+</body>
+</html>
