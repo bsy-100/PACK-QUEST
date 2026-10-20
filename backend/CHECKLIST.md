@@ -65,9 +65,9 @@
 - [x] AWS 계정 공유 방식 정하기 — 계정 하나를 같이 쓰고, AWS 작업은 A 노트북에서 순서를 정해 함(10/20)
 - [x] 예산 알람을 만들 수 있는지 확인 — 권한이 없어 만들지 못함(10/20). NAT Gateway가 계속 과금되므로 발표 후 리소스 삭제를 꼭 한다
 - [x] Backend 서버(EC2, packquest-private-app, 공인 IP 없음, packquest-sg-app, packquest-ec2-backend-role) — `packquest-backend`(`i-033c073cd3d240ab7`), Ubuntu 24.04, 프라이빗 IP `10.0.1.154`
-- [ ] DB 서버 MariaDB: `bind-address`를 프라이빗 IP로, `schema.sql` 실행
-- [ ] 앱 계정 `packquest_app`@`<Backend 프라이빗 IP>`, packquest DB에 SELECT·INSERT·UPDATE·DELETE만. **비밀번호는 영문·숫자로**(한글이면 서버가 접속하지 못한다)
-- [ ] Parameter Store SecureString `/packquest/db-password`
+- [x] DB 서버 MariaDB: `bind-address`를 프라이빗 IP로, `schema.sql` 실행 — DB 서버 프라이빗 IP `10.0.2.237`, MariaDB 10.11
+- [x] 앱 계정 `packquest_app`@`<Backend 프라이빗 IP>`, packquest DB에 SELECT·INSERT·UPDATE·DELETE만. **비밀번호는 영문·숫자로**(한글이면 서버가 접속하지 못한다)
+- [x] Parameter Store SecureString `/packquest/db-password`
 
 ### 내 할 일
 
@@ -87,8 +87,8 @@
 
 ### 내 할 일
 
-- [ ] `DEPLOY.md` 순서대로 배포: 패키지 → 코드(https, 공개 저장소) → 설정 파일 → 연결 확인 → systemd
-- [ ] 서버 안에서 `python3 tests/smoke_test.py http://127.0.0.1:8000/api` 통과
+- [x] `DEPLOY.md` 순서대로 배포: 패키지 → 코드(https, 공개 저장소) → 설정 파일 → 연결 확인 → systemd — 10/20에 앞당겨 완료(코드는 A가 Deploy key로 받음), 재부팅 후 자동 시작 확인
+- [x] 서버 안에서 `python3 tests/smoke_test.py http://127.0.0.1:8000/api` 통과 — 43/43(10/20)
 - [ ] CloudFront 연결 후 `python3 tests/smoke_test.py https://<CloudFront 도메인>/api` 통과
 - [ ] C와 화면·API 연동 확인: 여행 만들기 → 참여 → 맡기 → 체크 → 진행률 → 삭제
 - [ ] 배포한 사람·시간·커밋을 팀 채팅에 기록
