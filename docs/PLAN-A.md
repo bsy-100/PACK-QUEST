@@ -41,7 +41,7 @@
 - [ ] 장기 액세스 키 없음 — **10/19 확인 결과: 내 IAM 사용자에 액세스 키가 등록되어 있음.** 처리 방법 결정 대기(아래 참고)
 - [ ] MFA — 10/19 확인 결과: **비활성화**. 등록 가능 여부 결정 대기
 - [x] **권한 미리 확인**: `AdministratorAccess` 정책이 붙어 있음 — 10/19 확인. 단계 2~15에 필요한 권한은 이 정책에 포함됨(정책 시뮬레이터 확인은 생략)
-- [ ] 비용 확인 화면(청구서 또는 Cost Explorer) 열림 — **미확인**(나중에 확인하기로 함)
+- [ ] 비용 확인 화면(청구서 또는 Cost Explorer) 열림 — 10/20 CLI로 Cost Explorer 조회는 됨(10월 누적 약 $187, 대부분 10/17 이전 비용). **콘솔 화면 열림은 미확인**
 
 > 액세스 키 처리: 키를 만든 사람(강사·관리자)과 용도를 먼저 확인한다. 쓰지 않는 키라면 **비활성화**(되돌릴 수 있음)부터 하고, 삭제는 제공자와 합의한 뒤에만 한다. 콘솔에서 키의 "마지막 사용" 시각을 보면 지금 쓰이는지 알 수 있다.
 
@@ -72,12 +72,12 @@ Backend 역할에 붙일 인라인 정책(파라미터 **하나만**):
 ### 1일 차 병행 작업
 - [ ] **기존 실습 기록 확인**: 이전 실습에서 CloudFront → API 연결을 어떻게 했는지 찾아 팀에 공유. 같은 구조를 쓸 수 있으면 그 방식을 먼저 쓰고, 아니면 VPC 오리진 방식으로 2~3일 차에 검증.
 - [ ] B·C와 API 명세 회의(공통 규칙: `/api` 경로, `X-Pack-Token`, JSON 오류 형식, `/api/health`)
-- [ ] B가 만든 `schema.sql` 검토(외래 키 `ON DELETE CASCADE`, utf8mb4)
-- [ ] 리소스 기록표 1일 차 칸 채우기
+- [x] B가 만든 `schema.sql` 검토(외래 키 `ON DELETE CASCADE`, utf8mb4) — 10/20 확인(trips·members CASCADE, assignee SET NULL, utf8mb4_unicode_ci)
+- [x] 리소스 기록표 1일 차 칸 채우기
 
 ### 1일 차 끝 체크
 - [x] VPC/IGW/서브넷 3/RT 2/NAT/SG 2/IAM 역할 2 완료 · 기록표 반영 — 10/19 확인
-- [ ] 비용·실행 중 리소스 확인(NAT Gateway 과금 시작)
+- [x] 비용·실행 중 리소스 확인(NAT Gateway 과금 시작) — 10/19에는 못 함, 10/20 확인(EC2 2대·NAT·EIP 1개만 실행 중, 다른 리전 EC2 없음, 서울 ELB 없음)
 
 ---
 
@@ -159,7 +159,7 @@ mariadb -h <DB_PRIVATE_IP> -u root -p                                       # �
 - [x] 앱 계정 접속 성공 / root 원격 접속 실패 — 10/20 확인: Backend에서 pymysql `DB-OK`, Backend에서 `mariadb -h 10.0.2.237 -u root` → `ERROR 1045 Access denied for user 'root'@'ip-10-0-1-154...'`
 - [x] B의 `/api/health` 뼈대가 `curl http://<BACKEND_IP>:8000/api/health`로 응답 (B 담당, 나는 확인만) — 10/20 B 배포 완료, 서비스 active·`0.0.0.0:8000`·health 200·DB 연동 정상(사용자 확인)
 - [x] C의 뼈대 화면이 버킷에 보임 (C 담당, 나는 확인만) — 10/20 조회 확인
-- [ ] 기록표 2일 차 칸 채우기
+- [x] 기록표 2일 차 칸 채우기 — 10/20(Backend·DB EC2, MariaDB, Parameter, S3)
 
 ---
 
