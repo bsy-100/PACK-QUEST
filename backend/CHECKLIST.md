@@ -62,17 +62,17 @@
 ### 먼저 필요한 것 (A)
 
 - [x] VPC·서브넷·NAT·보안 그룹, EC2용 IAM 역할 2개 — A가 1일 차에 완료(`docs/aws-setup.md`). Backend 역할에 Parameter Store `/packquest/db-password` 읽기가 있어 B 코드는 그대로 쓴다
-- [ ] AWS 계정 공유 방식 정하기 — 비밀번호는 채팅에 올리지 않고 A의 화면에서 같이 작업
-- [ ] 예산 알람을 만들 수 있는지 확인
-- [ ] Backend 서버(EC2, packquest-private-app, 공인 IP 없음, packquest-sg-app, packquest-ec2-backend-role)
+- [x] AWS 계정 공유 방식 정하기 — 계정 하나를 같이 쓰고, AWS 작업은 A 노트북에서 순서를 정해 함(10/20)
+- [x] 예산 알람을 만들 수 있는지 확인 — 권한이 없어 만들지 못함(10/20). NAT Gateway가 계속 과금되므로 발표 후 리소스 삭제를 꼭 한다
+- [x] Backend 서버(EC2, packquest-private-app, 공인 IP 없음, packquest-sg-app, packquest-ec2-backend-role) — `packquest-backend`(`i-033c073cd3d240ab7`), Ubuntu 24.04, 프라이빗 IP `10.0.1.154`
 - [ ] DB 서버 MariaDB: `bind-address`를 프라이빗 IP로, `schema.sql` 실행
 - [ ] 앱 계정 `packquest_app`@`<Backend 프라이빗 IP>`, packquest DB에 SELECT·INSERT·UPDATE·DELETE만. **비밀번호는 영문·숫자로**(한글이면 서버가 접속하지 못한다)
 - [ ] Parameter Store SecureString `/packquest/db-password`
 
 ### 내 할 일
 
-- [ ] Backend 서버에 SSM으로 접속해 보기 (PRD 구축 절차 10단계)
-- [ ] `feature/frontend`가 `main`에 합쳐지면 다시 받아서 로컬 연동 확인
+- [x] Backend 서버에 SSM으로 접속해 보기 (PRD 구축 절차 10단계) — A 노트북 콘솔 Session Manager로 접속 완료(10/20)
+- [x] `feature/frontend`가 `main`에 합쳐지면 다시 받아서 로컬 연동 확인 — 합치기 전 PR #3 최신 커밋으로 테스트 43개 통과, PR #3 머지·`main` 받기 완료(10/20)
 
 ---
 
