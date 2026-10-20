@@ -1,17 +1,16 @@
 # Backend 서버 배포 (B)
 
-PRD 구축 절차 13단계와 "배포와 운영 방식"을 그대로 따른다. 처음 한 번은 1~8, 이후 업데이트는 9만 하면 된다.
+PRD 구축 절차 13단계와 "배포와 운영 방식"을 그대로 따른다. 처음 한 번은 1~7, 이후 업데이트는 8만 하면 된다.
 
 ## 0. 시작 전에 A에게 확인할 것
 
 | 항목 | 확인 |
 |---|---|
-| Backend 서버 | 앱 서브넷, 공인 IP 없음, sg-app, Backend용 IAM 역할 |
+| Backend 서버 | Ubuntu(`ubuntu` 사용자 기준), 앱 서브넷, 공인 IP 없음, sg-app, Backend용 IAM 역할 |
 | DB 서버 프라이빗 IP | `/etc/packquest/api.env`의 `DB_HOST`에 넣는다 |
 | MariaDB | `bind-address`가 DB 서버 프라이빗 IP, `schema.sql` 실행 완료 |
 | 앱 계정 | `packquest_app`@`<Backend 서버 프라이빗 IP>`, packquest DB에 SELECT·INSERT·UPDATE·DELETE |
 | Parameter Store | SecureString `/packquest/db-password`, Backend 역할만 읽기 가능 |
-| GitHub | 저장소 관리자(Deploy key 등록 권한)가 누구인지 |
 
 DB 비밀번호는 영문·숫자·기호로만 만든다(PyMySQL은 한글 비밀번호로 접속하지 못한다).
 
@@ -30,34 +29,18 @@ sudo apt update
 sudo apt install -y git python3-venv mariadb-client
 ```
 
-## 3. GitHub Deploy key (읽기 전용)
+## 3. 코드 받기, 가상환경
+
+저장소가 공개라서 https로 받는다. 서버에 GitHub 키나 토큰을 두지 않는다(저장소를 비공개로 바꾸면 읽기 전용 Deploy key가 필요하다).
 
 ```bash
-ssh-keygen -t ed25519 -C packquest-backend -f ~/.ssh/packquest_deploy -N ""
-cat >> ~/.ssh/config <<'EOF'
-Host github.com
-  IdentityFile ~/.ssh/packquest_deploy
-  IdentitiesOnly yes
-EOF
-cat ~/.ssh/packquest_deploy.pub
-```
-
-출력된 한 줄을 GitHub 저장소 → Settings → Deploy keys → Add deploy key에 붙인다. **Allow write access는 체크하지 않는다.** 저장소 관리자만 할 수 있다.
-
-```bash
-ssh -T git@github.com    # "You've successfully authenticated" 나오면 성공
-```
-
-## 4. 코드 받기, 가상환경
-
-```bash
-git clone git@github.com:bsy-100/PACK-QUEST.git ~/PACK-QUEST
+git clone https://github.com/bsy-100/PACK-QUEST.git ~/PACK-QUEST
 cd ~/PACK-QUEST/backend
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 ```
 
-## 5. 서비스 설정 파일 (비밀번호 없음)
+## 4. 서비스 설정 파일 (비밀번호 없음)
 
 ```bash
 sudo mkdir -p /etc/packquest
@@ -67,7 +50,7 @@ sudo chown root:ubuntu /etc/packquest/api.env
 sudo chmod 640 /etc/packquest/api.env
 ```
 
-## 6. 서비스 등록 전에 연결 확인
+## 5. 서비스 등록 전에 연결 확인
 
 Parameter Store 읽기와 DB 접속을 한 번에 본다.
 
@@ -84,7 +67,7 @@ cur.execute('SHOW TABLES'); print(cur.fetchall())"
 
 `packquest_app@<Backend IP>`, `+00:00`, 테이블 3개가 나오면 성공. 실패하면 아래 "문제 해결"을 본다.
 
-## 7. systemd 등록 (처음 한 번)
+## 6. systemd 등록 (처음 한 번)
 
 ```bash
 sudo cp deploy/packquest-api.service /etc/systemd/system/
@@ -93,7 +76,7 @@ sudo systemctl enable --now packquest-api
 systemctl status packquest-api --no-pager
 ```
 
-## 8. 확인
+## 7. 확인
 
 ```bash
 curl -s http://127.0.0.1:8000/api/health                               # {"status":"ok"}
@@ -104,7 +87,7 @@ journalctl -u packquest-api -n 50 --no-pager
 
 스모크 테스트는 테스트 여행을 만들고 끝나면 지운다. CloudFront가 붙은 뒤에는 `https://<CloudFront 도메인>/api`로 한 번 더 돌린다.
 
-## 9. 업데이트 배포 (코드가 바뀔 때마다)
+## 8. 업데이트 배포 (코드가 바뀔 때마다)
 
 ```bash
 sudo su - ubuntu
@@ -142,7 +125,7 @@ journalctl -u packquest-api -f -o cat
 | `AccessDeniedException` (ssm) | Backend 역할에 `/packquest/db-password` 읽기 권한(KMS 복호화 포함)이 있는지 |
 | `ParameterNotFound` | 파라미터 이름, 리전(`AWS_REGION`) |
 | 서비스가 계속 재시작 | `journalctl -u packquest-api -n 100` |
-| CloudFront에서 502 | uvicorn이 `0.0.0.0:8000`에서 듣는지(8단계 두 번째 curl), sg-app 허용 규칙 |
+| CloudFront에서 502 | uvicorn이 `0.0.0.0:8000`에서 듣는지(7단계 두 번째 curl), sg-app 허용 규칙 |
 | API 오류가 HTML로 옴 | CloudFront 사용자 지정 오류 응답이 비어 있는지 |
 | 서버에서 토큰 오류만 남 | `/api/*` 원본 요청 정책이 `Managed-AllViewerAndCloudFrontHeaders-2022-06`인지(`X-Pack-Token` 전달) |
 
