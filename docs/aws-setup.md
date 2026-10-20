@@ -36,4 +36,4 @@
 
 ## 진행 상황
 - 1일 차 (10/19): 완료 — VPC, 인터넷 게이트웨이, 서브넷 3개, 라우팅 테이블 2개, NAT Gateway, 보안 그룹 2개, EC2용 IAM 역할 2개. 모두 생성 후 조회로 설정값 확인함. NAT Gateway는 이때부터 과금 중.
-- 2일 차 (10/20): 진행 중 — Backend 서버 생성 완료(상태 검사 2/2, SSM Online 확인) → B에게 전달 → S3 버킷 생성 완료(packquest-web-1b07b2) → C에게 전달 → Parameter Store 비밀번호 생성 완료(단계 12 먼저) → DB 서버 생성 완료(10.0.2.237, 상태 검사 2/2, SSM Online) → MariaDB 설치·설정 완료(10.11.14, bind 10.0.2.237, 테이블 3개, 앱 계정 packquest_app@10.0.1.154) → Backend에서 앱 계정 접속 성공(DB-OK) → 하루 끝에 Backend에서 DB 접속 확인.
+- 2일 차 (10/20): 진행 중 — Backend 서버 생성 완료(상태 검사 2/2, SSM Online 확인) → B에게 전달 → S3 버킷 생성 완료(packquest-web-1b07b2) → C에게 전달·뼈대 화면 업로드 확인 → Parameter Store 비밀번호 생성 완료(단계 12 먼저) → DB 서버 생성 완료(10.0.2.237, 상태 검사 2/2, SSM Online) → MariaDB 설치·설정 완료(10.11.14, bind 10.0.2.237, 테이블 3개, 앱 계정 packquest_app@10.0.1.154) → Backend에서 앱 계정 접속 성공(DB-OK) → 하루 끝에 Backend에서 DB 접속 확인.
