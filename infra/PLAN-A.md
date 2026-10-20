@@ -179,7 +179,7 @@ mariadb -h <DB_PRIVATE_IP> -u root -p                                       # �
    - 허용 메서드: GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE 전부
 7. [x] **사용자 지정 오류 응답(Error pages)은 설정하지 않는다** (10/20 조회 확인: 0개) (API JSON 오류가 index.html로 바뀜)
 8. [x] `sg-app` 허용 규칙 교체: 인바운드 TCP 8000, 소스 = **`CloudFront-VPCOrigins-Service-SG`** (서비스 관리형 SG) → 접두사 목록 임시 규칙 **삭제**. 서비스 관리형 SG는 수정하지 않고, 같은 이름 패턴으로 SG를 직접 만들지 않는다. — 10/20 CLI 추가 `sgr-06aca535c28be0e66`(TCP 8000 ← sg-01f21584ac34ee388). 임시 접두사 목록 규칙은 만들지 않았으므로 삭제할 것 없음. 조회 확인: sg-app 인바운드는 이 규칙 1개뿐
-9. [ ] C에게 배포 ID·도메인 전달 (화면 변경 후 C가 캐시 무효화)
+9. [x] C에게 배포 ID·도메인 전달 (화면 변경 후 C가 캐시 무효화) — 10/20 전달. C가 새 디자인(feature/frontend `584309b`) 7개 파일을 콘솔로 덮어쓰기 업로드(15:35, 크기 일치 확인) → 무효화 `/*` Completed(15:37) → CloudFront가 새 index.html(17,922B) 제공 확인. **S3는 main이 아닌 feature/frontend 버전**이므로 PR 병합으로 맞춰야 함
 
 ### 확인
 - [x] `https://<dxxxx>.cloudfront.net/` → 화면 열림 (403 아님) — 10/20 200, `<title>PACK QUEST</title>`, http→https 301
