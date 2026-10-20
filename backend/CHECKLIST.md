@@ -8,6 +8,8 @@
 
 1일 차에 API 명세 확정, schema.sql, **API 9개 구현·테스트**, 3일 차 배포 준비까지 끝냈다(원래 2일 차 일정까지 포함). 모두 `main`에 합쳐져 있다(PR #1).
 
+2일 차에 **Backend 서버 배포와 DB 연결까지** 끝냈다(원래 3일 차 일정). 서버 안에서 테스트 43개 통과. 남은 일은 CloudFront 연결 후 확인과 화면 연동이다.
+
 | 결과물 | 위치 |
 |---|---|
 | API 9개 (FastAPI) | `backend/app/` |
@@ -17,6 +19,7 @@
 | 서버 배포 순서 | `backend/deploy/DEPLOY.md` |
 | 화면용 실제 응답 예시 17개 | `docs/api-examples/` |
 | 실행 방법 | `backend/README.md` |
+| 2일 차 정리(쉬운 말) | [PACK QUEST 2일 차 정리](https://claude.ai/code/artifact/add41fad-80f6-4246-abaa-cf701ab1b8f4) |
 
 ---
 
@@ -55,9 +58,9 @@
 
 ---
 
-## 2일 차 — 10/20(화): 서버 접속 확인
+## 2일 차 — 10/20(화): 서버 접속 확인 → Backend 배포까지
 
-**목표:** Backend 서버에 SSM으로 접속되고, DB 연결 준비가 끝난다
+**목표:** Backend 서버에 SSM으로 접속되고, DB 연결 준비가 끝난다 → 배포와 DB 연결까지 앞당겨 끝냄. C는 결석, A·B 둘이 작업
 
 ### 먼저 필요한 것 (A)
 
@@ -73,6 +76,33 @@
 
 - [x] Backend 서버에 SSM으로 접속해 보기 (PRD 구축 절차 10단계) — A 노트북 콘솔 Session Manager로 접속 완료(10/20)
 - [x] `feature/frontend`가 `main`에 합쳐지면 다시 받아서 로컬 연동 확인 — 합치기 전 PR #3 최신 커밋으로 테스트 43개 통과, PR #3 머지·`main` 받기 완료(10/20)
+- [x] `DEPLOY.md` 코드 받기를 https로 변경 — 공개 저장소라 Deploy key가 필요 없고, 저장소 주인(C) 없이 배포할 수 있다
+- [x] (3일 차 일 앞당김) Backend 배포, DB 연결, 서버 테스트 43개 통과, 재부팅 후 자동 시작 확인 — 아래 3일 차 참고
+
+### 정한 것
+
+- **AWS 작업은 A 노트북 한 대로 한다.** 계정(IAM 사용자) 하나를 셋이 같이 쓴다. B의 서버 작업도 A 노트북에서 하므로 매일 아침 사용 순서를 정한다
+- **S3 버킷은 A가 공용 계정에 만든다**(`packquest-web-1b07b2`, 10/20 완료). C는 화면 파일 업로드와 캐시 무효화만 한다
+- **배포는 저장소의 `DEPLOY.md` 기준.** A의 PLAN-B.md와 경로가 다르다. 실제 서버는 `~/PACK-QUEST/backend`, 설정은 `/etc/packquest/api.env`
+- **서버 코드는 A가 Deploy key로 받았다.** 그대로 써도 되고, 발표 후 GitHub에서 키를 삭제한다
+
+### 서버 정보
+
+| 항목 | Backend | DB |
+|---|---|---|
+| 이름 | `packquest-backend` (`i-033c073cd3d240ab7`) | `packquest-db` (`i-06c3000b9c697fd63`) |
+| 프라이빗 IP | `10.0.1.154` | `10.0.2.237` |
+| 내용 | Ubuntu 24.04, systemd `packquest-api`, `0.0.0.0:8000` | MariaDB 10.11, DB `packquest`, 테이블 3개 |
+| 접속 | 콘솔 Session Manager → `sudo su - ubuntu` | API는 `packquest_app`@`10.0.1.154`(권한 4개) |
+
+### 오늘 본 오류
+
+| 오류 | 뜻 |
+|---|---|
+| `Can't connect ... '127.0.0.1'` | `api.env`에 `DB_HOST`가 없어 기본값(자기 자신)으로 접속했다. 명령의 `<DB 사설 IP>` 자리를 실제 IP로 바꿔야 한다 |
+| `1130 Host ... is not allowed` | DB에 그 서버에서 들어올 수 있는 계정이 아직 없었다 |
+| `1045 Access denied for user 'root'` | 정상. root 원격 접속은 막혀 있어야 한다 |
+| 재시작 직후 `Connection refused` | 서비스가 아직 뜨는 중이었다. 몇 초 뒤 다시 하면 된다 |
 
 ---
 
@@ -82,8 +112,9 @@
 
 ### 먼저 필요한 것 (A·C)
 
-- [ ] A: CloudFront VPC 오리진, `/api/*` 동작(원본 요청 정책 `Managed-AllViewerAndCloudFrontHeaders-2022-06`, 사용자 지정 오류 응답 없음)
-- [ ] C: 화면 S3 업로드
+- [x] A: S3 버킷 `packquest-web-1b07b2`(10/20)
+- [ ] A: CloudFront VPC 오리진, `sg-app`에 CloudFront에서 오는 8000번 허용, `/api/*` 동작(원본 요청 정책 `Managed-AllViewerAndCloudFrontHeaders-2022-06`, 사용자 지정 오류 응답 없음)
+- [ ] C: 화면 S3 업로드 — 10/20 뼈대 화면은 올라가 있음, 최종본 업로드는 남음
 
 ### 내 할 일
 
@@ -91,6 +122,7 @@
 - [x] 서버 안에서 `python3 tests/smoke_test.py http://127.0.0.1:8000/api` 통과 — 43/43(10/20)
 - [ ] CloudFront 연결 후 `python3 tests/smoke_test.py https://<CloudFront 도메인>/api` 통과
 - [ ] C와 화면·API 연동 확인: 여행 만들기 → 참여 → 맡기 → 체크 → 진행률 → 삭제
+- [ ] 서버 로그에서 `X-Pack-Token`, `CloudFront-Viewer-Address`가 들어오는지 확인(요청 제한 IP 구분)
 - [ ] 배포한 사람·시간·커밋을 팀 채팅에 기록
 
 ---
@@ -105,6 +137,7 @@
 
 - [ ] 최종 배포 확인, 시연 리허설
 - [ ] 데모 중 서버 로그 보여주기: `journalctl -u packquest-api -f -o cat`
+- [ ] 발표 후: GitHub Deploy key 삭제, AWS 리소스 삭제 확인(예산 알람이 없어 NAT 비용이 계속 나간다)
 
 ---
 
