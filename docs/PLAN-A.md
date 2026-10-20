@@ -95,7 +95,7 @@ Backend 역할에 붙일 인라인 정책(파라미터 **하나만**):
 - [ ] C에게 버킷 이름 전달 (C가 2일 차 안에 뼈대 `index.html` 업로드) — 미확인. `frontend/CHECKLIST.md`의 "C가 버킷 생성"(38~40·97·179행)은 PRD v4.3 이전 기준이므로 C에게 수정 요청
 
 ### 단계 8 · 10 — DB 서버
-- [ ] EC2 `packquest-db`: Ubuntu LTS, `packquest-private-db`, 공인 IP 없음, `sg-db`, `packquest-ec2-db-role`, 키 페어 없음, EBS 암호화
+- [x] EC2 `packquest-db`: Ubuntu LTS, `packquest-private-db`, 공인 IP 없음, `sg-db`, `packquest-ec2-db-role`, 키 페어 없음, EBS 암호화 — 10/20 CLI 생성 후 조회 확인(`i-06c3000b9c697fd63`, t3.small, Ubuntu 24.04, 프라이빗 IP 10.0.2.237, IMDSv2 필수, 상태 검사 2/2, SSM Online)
 - [ ] Session Manager로 접속 확인
 
 ### 단계 11 — MariaDB 설치·설정 (DB 서버 SSM 세션)
@@ -292,7 +292,7 @@ sudo mariadb -e "DROP DATABASE packquest_restore_test;"
 | IAM 역할(DB) | packquest-ec2-db-role | SSMManagedInstanceCore, 인스턴스 프로파일 동명 | arn:aws:iam::<ACCOUNT_ID>:role/packquest-ec2-db-role (10/19) |
 | IAM 역할(Backend) | packquest-ec2-backend-role | SSMManagedInstanceCore + 인라인 `packquest-read-db-password`(GetParameter 1개), 인스턴스 프로파일 동명 | arn:aws:iam::<ACCOUNT_ID>:role/packquest-ec2-backend-role (10/19) |
 | Backend EC2 | packquest-backend | Ubuntu 24.04 LTS (ami-0e1eeb87102d64f40), t3.small, packquest-private-app, 프라이빗 IP 10.0.1.154 (ip-10-0-1-154.ap-northeast-2.compute.internal), 공인 IP·키 페어 없음, sg-app, packquest-ec2-backend-role, IMDSv2 필수, EBS 8GB gp3 암호화(vol-038bb10ecc7402eba) | i-033c073cd3d240ab7 (10/20) |
-| DB EC2 | packquest-db | Ubuntu ___, 프라이빗 IP ___ | |
+| DB EC2 | packquest-db | Ubuntu 24.04 LTS (ami-0e1eeb87102d64f40), t3.small, packquest-private-db, 프라이빗 IP 10.0.2.237 (ip-10-0-2-237.ap-northeast-2.compute.internal), 공인 IP·키 페어 없음, sg-db, packquest-ec2-db-role, IMDSv2 필수, EBS 8GB gp3 암호화(vol-03ade82015a4b056f) | i-06c3000b9c697fd63 (10/20) |
 | MariaDB | DB `packquest` | bind-address ___, 앱 계정 `packquest_app@<backend IP>` | 권한 S/I/U/D |
 | Parameter | /packquest/db-password | SecureString, aws/ssm 키, Standard, 영문·숫자 32자. **단계 11의 CREATE USER에 이 값을 써야 함** | 버전 1 (10/20, 단계 11보다 먼저 생성) |
 | S3 버킷 | packquest-web-1b07b2 | ap-northeast-2, 퍼블릭 액세스 차단 4개 모두 켬, 정적 웹 호스팅 없음, 객체 소유권 BucketOwnerEnforced(ACL 비활성), 기본 암호화 SSE-S3, 버킷 정책 없음(단계 15에서 OAC 정책 추가) | arn:aws:s3:::packquest-web-1b07b2 (10/20) |

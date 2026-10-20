@@ -26,6 +26,7 @@
 
 ## EC2
 - Backend: packquest-backend (`i-033c073cd3d240ab7`) — Ubuntu 24.04 LTS, t3.small, packquest-private-app, 프라이빗 IP 10.0.1.154 (`ip-10-0-1-154.ap-northeast-2.compute.internal`), 공인 IP·키 페어 없음, sg-app, packquest-ec2-backend-role, IMDSv2 필수, EBS 8GB gp3 암호화
+- DB: packquest-db (`i-06c3000b9c697fd63`) — Ubuntu 24.04 LTS, t3.small, packquest-private-db, 프라이빗 IP 10.0.2.237 (`ip-10-0-2-237.ap-northeast-2.compute.internal`), 공인 IP·키 페어 없음, sg-db, packquest-ec2-db-role, IMDSv2 필수, EBS 8GB gp3 암호화
 
 ## S3
 - 화면 버킷: packquest-web-1b07b2 — ap-northeast-2, 퍼블릭 액세스 모두 차단, 정적 웹 호스팅 없음, ACL 비활성(BucketOwnerEnforced), SSE-S3. 버킷 정책은 3일 차 CloudFront OAC 정책만 추가 예정
@@ -35,4 +36,4 @@
 
 ## 진행 상황
 - 1일 차 (10/19): 완료 — VPC, 인터넷 게이트웨이, 서브넷 3개, 라우팅 테이블 2개, NAT Gateway, 보안 그룹 2개, EC2용 IAM 역할 2개. 모두 생성 후 조회로 설정값 확인함. NAT Gateway는 이때부터 과금 중.
-- 2일 차 (10/20): 진행 중 — Backend 서버 생성 완료(상태 검사 2/2, SSM Online 확인) → B에게 전달 → S3 버킷 생성 완료(packquest-web-1b07b2) → C에게 전달 → Parameter Store 비밀번호 생성 완료(단계 12 먼저) → DB 서버 생성 → MariaDB 설치·설정 → 하루 끝에 Backend에서 DB 접속 확인.
+- 2일 차 (10/20): 진행 중 — Backend 서버 생성 완료(상태 검사 2/2, SSM Online 확인) → B에게 전달 → S3 버킷 생성 완료(packquest-web-1b07b2) → C에게 전달 → Parameter Store 비밀번호 생성 완료(단계 12 먼저) → DB 서버 생성 완료(10.0.2.237, 상태 검사 2/2, SSM Online) → MariaDB 설치·설정 → 하루 끝에 Backend에서 DB 접속 확인.
