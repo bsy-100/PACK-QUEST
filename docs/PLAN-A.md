@@ -147,7 +147,7 @@ SHOW GRANTS FOR 'packquest_app'@'<BACKEND_PRIVATE_IP>';
 - [x] `/packquest/db-password`, 유형 **SecureString**, 값 = 위 무작위 비밀번호 — 10/20 **단계 11보다 먼저** CLI 생성(값은 출력하지 않음). 조회 확인: SecureString, `alias/aws/ssm`, Standard, 버전 1, ARN이 Backend 역할 정책 Resource와 일치
   - 먼저 한 이유: B의 `backend/app/config.py`가 시작할 때 이 파라미터를 읽어서, 없으면 서비스가 뜨지 않는다
 - [x] Backend 서버에서 읽기 권한 확인 — 10/20 boto3로 파라미터를 읽어 앱 계정으로 DB 접속까지 성공(`DB-OK`, 값 출력 없음)
-- [ ] B에게 전달: DB 호스트(DB 프라이빗 IP `10.0.2.237`), 계정명 `packquest_app`, DB명 `packquest`, 파라미터 이름 `/packquest/db-password` (**비밀번호 자체는 전달하지 않음**)
+- [x] B에게 전달(10/20): DB 호스트(DB 프라이빗 IP `10.0.2.237`), 계정명 `packquest_app`, DB명 `packquest`, 파라미터 이름 `/packquest/db-password` (**비밀번호 자체는 전달하지 않음**)
 
 ### 2일 차 끝: DB 접속 확인 (인계물)
 Backend 서버 SSM 세션에서 (B와 함께):
@@ -157,7 +157,7 @@ mariadb -h <DB_PRIVATE_IP> -u packquest_app -p packquest -e "SHOW TABLES;"   # �
 mariadb -h <DB_PRIVATE_IP> -u root -p                                       # 실패해야 함
 ```
 - [x] 앱 계정 접속 성공 / root 원격 접속 실패 — 10/20 확인: Backend에서 pymysql `DB-OK`, Backend에서 `mariadb -h 10.0.2.237 -u root` → `ERROR 1045 Access denied for user 'root'@'ip-10-0-1-154...'`
-- [ ] B의 `/api/health` 뼈대가 `curl http://<BACKEND_IP>:8000/api/health`로 응답 (B 담당, 나는 확인만)
+- [x] B의 `/api/health` 뼈대가 `curl http://<BACKEND_IP>:8000/api/health`로 응답 (B 담당, 나는 확인만) — 10/20 B 배포 완료, 서비스 active·`0.0.0.0:8000`·health 200·DB 연동 정상(사용자 확인)
 - [ ] C의 뼈대 화면이 버킷에 보임 (C 담당, 나는 확인만)
 - [ ] 기록표 2일 차 칸 채우기
 
