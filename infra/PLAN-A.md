@@ -185,7 +185,7 @@ mariadb -h <DB_PRIVATE_IP> -u root -p                                       # �
 - [x] `https://<dxxxx>.cloudfront.net/` → 화면 열림 (403 아님) — 10/20 200, `<title>PACK QUEST</title>`, http→https 301
 - [x] `https://<dxxxx>.cloudfront.net/api/health` → JSON 응답 — 10/20 `{"status":"ok"}` 200 application/json
 - [x] 없는 코드로 참여 → HTML이 아닌 **JSON 오류** — 10/20 `POST /api/trips/ZZZZZZZZ/members` → 404 `TRIP_NOT_FOUND` application/json
-- [ ] B와 함께 서버 로그에서 `X-Pack-Token`, `CloudFront-Viewer-Address`가 도착하는지 확인 (IPv6 형식도 이때 확인) — `X-Pack-Token` 도착은 10/20 간접 확인(헤더 없으면 TOKEN_MISSING, 잘못된 값이면 TOKEN_INVALID로 응답이 달라짐). `CloudFront-Viewer-Address`는 10/20 16:08 확인: CloudFront 경유 `POST /api/trips/LOGTEST2/members` 로그에 PC 공인 IPv4가 **포트 없이** 찍힘(B의 `client_ip()` 포트 제거 정상, 토큰은 로그에 없음). **IPv6 형식은 미확인**(휴대폰 LTE로 확인 예정). 참고: 로그 조회는 `sudo journalctl -u packquest-api --since "-30min"`(서버 시계 UTC, ubuntu는 journal 그룹 아님)
+- [x] B와 함께 서버 로그에서 `X-Pack-Token`, `CloudFront-Viewer-Address`가 도착하는지 확인 (IPv6 형식도 이때 확인) — `X-Pack-Token` 도착은 10/20 간접 확인(헤더 없으면 TOKEN_MISSING, 잘못된 값이면 TOKEN_INVALID로 응답이 달라짐). `CloudFront-Viewer-Address`는 10/20 16:08 확인: CloudFront 경유 `POST /api/trips/LOGTEST2/members` 로그에 PC 공인 IPv4가 **포트 없이** 찍힘(B의 `client_ip()` 포트 제거 정상, 토큰은 로그에 없음). IPv6도 10/20 16:19 확인: 휴대폰 LTE 요청이 `2001:2d8:...` 전체 8묶음, **포트 없이** 찍힘. 참고: 로그 조회는 `sudo journalctl -u packquest-api --since "-30min"`(서버 시계 UTC, ubuntu는 journal 그룹 아님)
 - [x] S3 객체 URL로 직접 접근 → 차단(AccessDenied) — 10/20 403
 
 ### 단계 16 — 전체 흐름 (A·B·C)
