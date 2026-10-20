@@ -91,8 +91,8 @@ Backend 역할에 붙일 인라인 정책(파라미터 **하나만**):
 - [x] B가 SSM으로 접속되지 않으면 NAT 경로 → 역할 → SSM 에이전트 순서로 같이 점검 — 10/20 B SSM 접속 완료(사용자 확인), 점검 불필요
 
 ### 단계 14 — S3 버킷 (오전)
-- [ ] `packquest-web-<고유값>` 생성, **퍼블릭 액세스 모두 차단**, 정적 웹 호스팅 **사용 안 함**
-- [ ] C에게 버킷 이름 전달 (C가 2일 차 안에 뼈대 `index.html` 업로드)
+- [x] `packquest-web-<고유값>` 생성, **퍼블릭 액세스 모두 차단**, 정적 웹 호스팅 **사용 안 함** — 10/20 `packquest-web-1b07b2` CLI 생성 후 조회 확인(ap-northeast-2, 퍼블릭 차단 4개 True, 웹 호스팅 없음, BucketOwnerEnforced, SSE-S3, 버킷 정책 없음)
+- [ ] C에게 버킷 이름 전달 (C가 2일 차 안에 뼈대 `index.html` 업로드) — 미확인. `frontend/CHECKLIST.md`의 "C가 버킷 생성"(38~40·97·179행)은 PRD v4.3 이전 기준이므로 C에게 수정 요청
 
 ### 단계 8 · 10 — DB 서버
 - [ ] EC2 `packquest-db`: Ubuntu LTS, `packquest-private-db`, 공인 IP 없음, `sg-db`, `packquest-ec2-db-role`, 키 페어 없음, EBS 암호화
@@ -287,7 +287,7 @@ sudo mariadb -e "DROP DATABASE packquest_restore_test;"
 | DB EC2 | packquest-db | Ubuntu ___, 프라이빗 IP ___ | |
 | MariaDB | DB `packquest` | bind-address ___, 앱 계정 `packquest_app@<backend IP>` | 권한 S/I/U/D |
 | Parameter | /packquest/db-password | SecureString, aws/ssm 키 | |
-| S3 버킷 | packquest-web-___ | 퍼블릭 차단, OAC 정책 | |
+| S3 버킷 | packquest-web-1b07b2 | ap-northeast-2, 퍼블릭 액세스 차단 4개 모두 켬, 정적 웹 호스팅 없음, 객체 소유권 BucketOwnerEnforced(ACL 비활성), 기본 암호화 SSE-S3, 버킷 정책 없음(단계 15에서 OAC 정책 추가) | arn:aws:s3:::packquest-web-1b07b2 (10/20) |
 | VPC 오리진 | packquest-vpc-origin | HTTP 8000, 프라이빗 IP DNS | |
 | CloudFront | packquest-cf | 기본→S3(OAC), `/api/*`→VPC 오리진, CachingDisabled, AllViewerAndCloudFrontHeaders-2022-06, Error pages 없음 | 도메인 ___ |
 | 백업 | packquest_YYYY-MM-DD.sql / packquest-db-snap-1022 | 복원 확인 ☐ | |
