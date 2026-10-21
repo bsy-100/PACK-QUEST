@@ -19,7 +19,7 @@
   - DB: EC2에 직접 설치한 MariaDB
   - 인프라: S3·CloudFront, EC2, VPC, NAT Gateway, SSM, Parameter Store
 - React 같은 프레임워크, Docker, Kubernetes, IaC(Terraform·CloudFormation), CI/CD, RDS, 새로운 기능을 임의로 추가하지 않는다.
-- MVP는 FR-01~07이다. FR-08(캐리어 완성도)은 사용자가 요청할 때만 한다. 향후 확장 항목은 구현하지 않는다(WebSocket, AI 추천, 날씨 API, 자동 만료). 로그인은 선택 기능으로 10/21 팀 결정에 따라 추가했다(`docs/API_AUTH.md`).
+- MVP는 FR-01~07이다. FR-08(캐리어 완성도)은 사용자가 요청할 때만 한다. FR-09(회원가입·로그인)는 10/21 팀 결정으로 추가했다(PRD v4.6, `docs/API_AUTH.md`): 로그인은 선택, 비로그인 합류 유지, 기존 `X-Pack-Token` 권한 검사는 바꾸지 않는다. 향후 확장 항목은 구현하지 않는다(WebSocket, AI 추천, 날씨 API, 자동 만료).
 - 기존 정상 기능과 API 계약을 유지하고, 요청 범위를 벗어난 파일은 변경하지 않는다.
 - 큰 기능은 작은 작업으로 나누고 현재 작업부터 구현한다.
 - 새 패키지가 필요하면 목적을 설명하고 `requirements.txt`에 기록한다.
@@ -47,7 +47,8 @@
 
 ## API와 코드 규칙
 - 모든 API 경로는 `/api` 아래에 둔다. `/api/health`는 토큰 없이 응답한다.
-- 여행 토큰은 `X-Pack-Token`, 로그인 토큰은 `X-Auth-Token` 헤더로만 주고받는다. `Authorization` 헤더는 쓰지 않는다.
+- 여행 토큰은 `X-Pack-Token`, 로그인 토큰은 `X-Auth-Token` 헤더로만 주고받는다. `Authorization` 헤더와 쿠키는 쓰지 않는다.
+- 로그인 실패 응답은 아이디 존재 여부를 알려 주지 않는다.
 - 오류는 `{"detail": {"code": "...", "message": "..."}}` 형식의 JSON으로 돌려준다.
 - 화면은 API를 상대 경로(`/api/...`)로 호출한다. 갱신은 5초 간격 폴링으로 하고, 토큰은 여행 코드별로 브라우저에 보관한다.
 - 요청 제한의 사용자 구분은 `CloudFront-Viewer-Address` 헤더에서 포트를 뺀 IP로 한다.

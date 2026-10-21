@@ -1,6 +1,6 @@
 # PLAN.md — PACK QUEST · A 역할(인프라·MariaDB)
 
-> 기준 문서: PACK QUEST PRD v4.5 · 기간 10/19(월)~10/23(금) · 금요일 라이브 데모
+> 기준 문서: PACK QUEST PRD v4.6(파일명 `PRD-v4.5.md` 유지) · 기간 10/19(월)~10/23(금) · 금요일 라이브 데모
 > 내 역할: **A — AWS 인프라(VPC·서브넷·보안 그룹·NAT·EC2·S3·CloudFront) + MariaDB 설치·관리**
 > 담당 단계: 1(로그인·권한 확인), 2~9, 10(DB 서버), 11, 12, 14(버킷), 15, 16·17(공동), 18, 19
 >
@@ -188,6 +188,88 @@ mariadb -h <DB_PRIVATE_IP> -u root -p                                       # �
 - [x] B와 함께 서버 로그에서 `X-Pack-Token`, `CloudFront-Viewer-Address`가 도착하는지 확인 (IPv6 형식도 이때 확인) — `X-Pack-Token` 도착은 10/20 간접 확인(헤더 없으면 TOKEN_MISSING, 잘못된 값이면 TOKEN_INVALID로 응답이 달라짐). `CloudFront-Viewer-Address`는 10/20 16:08 확인: CloudFront 경유 `POST /api/trips/LOGTEST2/members` 로그에 PC 공인 IPv4가 **포트 없이** 찍힘(B의 `client_ip()` 포트 제거 정상, 토큰은 로그에 없음). IPv6도 10/20 16:19 확인: 휴대폰 LTE 요청이 `2001:2d8:...` 전체 8묶음, **포트 없이** 찍힘. 참고: 로그 조회는 `sudo journalctl -u packquest-api --since "-30min"`(서버 시계 UTC, ubuntu는 journal 그룹 아님)
 - [x] S3 객체 URL로 직접 접근 → 차단(AccessDenied) — 10/20 403
 
+### FR-09 회원가입·로그인 — A 담당 (10/21 추가, PRD v4.6)
+> 결정(10/21): 아이디+비밀번호+닉네임, 로그인은 선택(비로그인 합류 유지), 여행별 `X-Pack-Token`은 그대로 두고 계정을 참여자에 연결만, 로그인 토큰은 `X-Auth-Token` 헤더.
+> **되돌리기 기준**: 10/22 정오까지 안 끝나면 로그인 없는 버전(main)으로 발표. DB에 추가한 테이블·NULL 컬럼은 기존 기능에 영향이 없으므로 지우지 않고 단계 19에서 함께 삭제한다.
+
+**AWS 리소스 변경 없음(예정)** — 아래 두 가지는 바꾸지 않는다.
+- CloudFront: `/api/*` 원본 요청 정책 `Managed-AllViewerAndCloudFrontHeaders-2022-06`이 모든 사용자 헤더를 넘기므로 `X-Auth-Token`도 그대로 전달된다. 관리형 정책이라 헤더를 추가할 수도 없고, 고정값이라 바꾸지 않는다. **확인만** 한다(L4).
+- Parameter Store·IAM: 로그인 토큰은 무작위 값 + 해시 저장(기존 토큰과 같은 방식)이라 서명 키가 필요 없다. B가 JWT 같은 서명 방식으로 바꾸면 그때 `/packquest/auth-secret`(SecureString) 생성 + `packquest-read-db-password` 정책 Resource 추가 + 단계 19 삭제 목록 추가를 다시 계획한다.
+
+**L1. 스키마 변경 전 백업 (DB 서버 SSM 세션, 사람이 실행)**
+```bash
+hostname -I        # 10.0.2.237 인지 먼저 확인 (WSL에서 실행하지 않기)
+sudo mysqldump --single-transaction --routines --triggers packquest \
+  > ~/packquest_before-fr09_$(date +%F_%H%M).sql
+ls -lh ~/packquest_before-fr09_*.sql
+sudo mariadb -e "SELECT COUNT(*) FROM packquest.trips; SELECT COUNT(*) FROM packquest.members; SELECT COUNT(*) FROM packquest.items;"
+```
+- [x] 덤프 파일 이름·크기, 테이블별 행 수 기록 — 10/21 확인(사용자 실행): DB 서버 `/home/ssm-user/packquest_before-fr09_2026-10-21_0111.sql` 6.6K, 마지막 줄 `-- Dump completed`. 행 수 trips 1 · members 1 · items 22
+  - 실수로 두 번 실행해 `_0109`도 생겼음(둘 다 정상 완료) → 늦은 `_0111`만 남기고 `_0109` 삭제, `ls`로 1개 확인
+
+**L2. 변경 SQL 검토 (B와 함께)**
+- 앱 계정은 S/I/U/D만 있어 `CREATE`·`ALTER`를 못 한다 → A가 root(`sudo mariadb`)로 적용한다. 권한은 `packquest.*`에 걸려 있어 새 테이블에도 자동 적용되므로 GRANT는 바꾸지 않는다.
+- 검토 기준: **추가만** 한다(DROP·데이터 변경 없음), `members.user_id`는 NULL 허용, 비밀번호·토큰 컬럼은 해시만.
+- 아래는 B 확정 전 초안이다. **B가 `db/schema.sql`과 함께 확정한 SQL로 적용한다.**
+```sql
+-- sudo mariadb packquest
+CREATE TABLE users (
+  id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  username      VARCHAR(20)  NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  nickname      VARCHAR(20)  NOT NULL,
+  created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_users_username (username)
+) ENGINE=InnoDB;
+
+-- 실제 적용된 것은 sessions(+expires_at). 아래는 초안 그대로 둔다
+CREATE TABLE auth_sessions (
+  token_hash CHAR(64)     NOT NULL,
+  user_id    INT UNSIGNED NOT NULL,
+  created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (token_hash),
+  KEY idx_auth_sessions_user (user_id),
+  CONSTRAINT fk_auth_sessions_user FOREIGN KEY (user_id)
+    REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+ALTER TABLE members
+  ADD COLUMN user_id INT UNSIGNED NULL AFTER nickname,
+  ADD UNIQUE KEY uq_members_user (trip_code, user_id),
+  ADD CONSTRAINT fk_members_user FOREIGN KEY (user_id)
+    REFERENCES users (id) ON DELETE SET NULL;
+```
+- `uq_members_user`: 한 계정이 같은 여행에 두 번 들어가지 않게 한다. user_id가 NULL인 비로그인 참여자는 여러 명이어도 된다.
+- [x] B 확정 SQL 받음, 위 기준으로 검토 — 10/21 **실행 후 검토**: B가 검토 전에 DB 서버에서 `curl … main/db/migrations/001_auth.sql | sudo mariadb`로 적용함. 파일(커밋 3ee0515 이후 변경 없음)을 읽어 확인: 추가만 있음(`CREATE TABLE IF NOT EXISTS` users·sessions, `ALTER TABLE members ADD … IF NOT EXISTS`), DROP·데이터 변경 없음, `members.user_id` NULL 허용 + FK `ON DELETE SET NULL`, `uq_members_user(trip_code, user_id)`, 비밀번호·토큰은 해시 컬럼만
+  - 초안과 다른 점: 세션 테이블 이름 `sessions`(초안 `auth_sessions`), `expires_at` 컬럼 추가(로그인 세션 만료), `user_id` 위치 `AFTER is_host`
+  - 앞으로: 검토 전 실행 금지, DB 서버에서는 GitHub에서 받아 바로 파이프하지 말고 검토한 SQL을 SSM 세션에 붙여 넣는다(PRD 보안 표의 schema.sql 방식)
+
+**L3. 적용과 확인 (DB 서버 SSM 세션, B 배포 전에)**
+```bash
+hostname -I                                   # 10.0.2.237
+sudo mariadb packquest                        # B 확정 SQL 붙여 넣기
+sudo mariadb packquest -e "SHOW TABLES; SHOW CREATE TABLE members\G"
+sudo mariadb -e "SELECT COUNT(*) FROM packquest.members;"   # L1과 같은 수
+```
+- [x] 테이블 5개(trips·members·items·users·sessions), `members.user_id` NULL 허용, FK 확인 — 일부 확인(10/21 B 실행 결과): 테이블 5개, 앱 계정 권한 그대로(`packquest`.* S/I/U/D). 10/21 `SHOW CREATE TABLE members` 확인(사용자 실행): `user_id int unsigned DEFAULT NULL`, `uq_members_user(trip_code,user_id)`, `fk_members_user … ON DELETE SET NULL`, 기존 `fk_members_trip` CASCADE 유지. 행 수 trips 1 · members 1 · items 22로 L1과 같음
+- [x] 기존 코드 그대로 동작 — 10/21 CloudFront `/api/health` 200 JSON `{"status":"ok"}`. `/api/auth/me`는 404 JSON(`NOT_FOUND`)이라 B의 새 코드는 아직 배포 전. 기존 여행 조회는 L4에서 함께 확인
+
+**L4. B 배포 후 CloudFront로 확인 (B와 함께)**
+- 10/21 1차 시도(에이전트, CloudFront 경유 21개 요청): **DB를 쓰는 모든 API가 500 `SERVER_ERROR`**(로그인 API와 비로그인 여행 만들기·합류·조회 모두). `/api/health`(DB 안 씀) 200, 로그인 실패 반복 시 26번째에 429 JSON(앞선 5회 포함 30/분, 정상). 새 코드는 배포됨(`/api/auth/signup`이 404가 아니라 500)
+  - 조회로 확인한 AWS 쪽: 두 EC2 running·상태 검사 ok, IP 그대로(10.0.1.154 / 10.0.2.237), `/packquest/db-password` 버전 3 그대로(10/20 이후 변경 없음), sg-db 3306 ← sg-app 그대로
+  - 원인(10/21 사용자 확인): Backend `journalctl`에 `(2003, "Can't connect ... ([Errno -2] Name or service not known)")`. DB 서버 MariaDB는 active, `10.0.2.237:3306` LISTEN으로 정상. `/etc/packquest/api.env`의 `DB_HOST`가 예시 자리표시 글자(`<DB 사설 IP>`) 그대로였음(재배포 때 예시로 덮어쓴 것으로 추정)
+  - 조치: `sed`로 `DB_HOST=10.0.2.237` 수정(`cat -A`로 확인) → `systemctl restart packquest-api` → active. B에게 전달: 재배포 때 `api.env.example` 복사는 처음 한 번만
+- 10/21 2차 시도(에이전트, CloudFront 경유): **21개 모두 통과**. 테스트 아이디 `pqtest_f6e3a5`(삭제 API가 없어 users에 남음, 세션은 로그아웃으로 삭제, 테스트 여행 2개는 API로 삭제)
+- [x] 가입 201 → 같은 아이디 409 → 로그인 200 → `GET /api/me`가 `X-Auth-Token`으로 200(헤더가 서버까지 옴, 실제 경로는 `/api/me`), 토큰 없음 401 `AUTH_MISSING`, 틀린 토큰 401 `AUTH_INVALID`, 로그아웃 204 후 같은 토큰 401 — 10/21
+- [x] 잘못된 비밀번호와 없는 아이디의 응답 코드·메시지가 같음(둘 다 401 `LOGIN_FAILED`) — 10/21
+- [x] 로그인 실패 반복 시 429 `RATE_LIMITED` JSON(분당 30회, 앞선 auth 요청 5회 포함 26번째) — 10/21
+- [x] 서버 로그에 비밀번호·토큰 원문 없음 — 10/21 사용자가 `journalctl … | grep -i -E "password|token"` 실행: 걸린 줄은 경로 이름(`/api/me/trips/<code>/token`)뿐이고 값 없음. B의 `app/logs.py`도 요청 줄에 메서드·경로(쿼리 제외)·상태·시간·IP·오류 코드만, 사건 줄에 아이디·닉네임만 남김(헤더·본문 기록 없음)
+- [x] 기존 흐름 그대로 동작: 비로그인 생성 201·합류 201·조회 200·주최자 삭제 204. 로그인 상태 생성 → 내 여행 목록에 주최자로 표시 → 다시 들어가기로 새 토큰 200, 예전 `X-Pack-Token` 401 — 10/21 (항목 체크는 이번에 안 함)
+
+**L5. 기록**
+- [ ] 리소스 기록표 MariaDB 행 갱신, 보안 슬라이드 재료(비밀번호 해시, 토큰 해시 저장, 요청 제한, 비밀값 위치 = DB 비밀번호만 Parameter Store) 정리
+
 ### 단계 16 — 전체 흐름 (A·B·C)
 - [ ] CloudFront 도메인에서 여행 생성 → 참여 → 체크 → 진행률 → 삭제 끝까지
 - [ ] 3일 차 저녁: 진행 상황 보고 FR-08(선택) 진행 여부 결정
@@ -271,7 +353,7 @@ sudo mariadb -e "DROP DATABASE packquest_restore_test;"
 | CloudFront `/api/*` 502/504 | uvicorn `--host 0.0.0.0`, sg-app 허용 규칙, VPC 오리진 Deployed, 원본 포트 8000 |
 | 화면 403 | S3 버킷 정책에 OAC 허용 정책 누락, 기본 루트 객체 |
 | API 오류가 HTML로 옴 | CloudFront 사용자 지정 오류 응답 설정됨 → 제거 |
-| 토큰이 서버에 안 옴 | `X-Pack-Token` 헤더, 원본 요청 정책 `AllViewerAndCloudFrontHeaders-2022-06` |
+| 토큰이 서버에 안 옴 | `X-Pack-Token`·`X-Auth-Token` 헤더 이름, 원본 요청 정책 `AllViewerAndCloudFrontHeaders-2022-06` |
 | SSM 접속 안 됨 | NAT 경로(rt-private) → EC2 역할 → SSM 에이전트 상태 |
 | apt/pip 설치 안 됨 | NAT Gateway Available, rt-private 0.0.0.0/0 → NAT |
 | 요청 제한이 안 먹음 | `CloudFront-Viewer-Address`에서 포트를 뺐는지(B와 확인) |
@@ -298,11 +380,12 @@ sudo mariadb -e "DROP DATABASE packquest_restore_test;"
 | IAM 역할(Backend) | packquest-ec2-backend-role | SSMManagedInstanceCore + 인라인 `packquest-read-db-password`(GetParameter 1개), 인스턴스 프로파일 동명 | arn:aws:iam::<ACCOUNT_ID>:role/packquest-ec2-backend-role (10/19) |
 | Backend EC2 | packquest-backend | Ubuntu 24.04 LTS (ami-0e1eeb87102d64f40), t3.small, packquest-private-app, 프라이빗 IP 10.0.1.154 (ip-10-0-1-154.ap-northeast-2.compute.internal), 공인 IP·키 페어 없음, sg-app, packquest-ec2-backend-role, IMDSv2 필수, EBS 8GB gp3 암호화(vol-038bb10ecc7402eba) | i-033c073cd3d240ab7 (10/20) |
 | DB EC2 | packquest-db | Ubuntu 24.04 LTS (ami-0e1eeb87102d64f40), t3.small, packquest-private-db, 프라이빗 IP 10.0.2.237 (ip-10-0-2-237.ap-northeast-2.compute.internal), 공인 IP·키 페어 없음, sg-db, packquest-ec2-db-role, IMDSv2 필수, EBS 8GB gp3 암호화(vol-03ade82015a4b056f) | i-06c3000b9c697fd63 (10/20) |
-| MariaDB | DB `packquest` | 10.11.14, bind-address 10.0.2.237, utf8mb4_unicode_ci, 테이블 trips·members·items(CASCADE / assignee SET NULL), 앱 계정 `packquest_app@10.0.1.154`, root localhost만 | 권한 S/I/U/D (10/20) |
+| MariaDB | DB `packquest` | 10.11.14, bind-address 10.0.2.237, utf8mb4_unicode_ci, 테이블 trips·members·items(CASCADE / assignee SET NULL) + 10/21 FR-09 users·sessions, members.user_id(NULL, SET NULL) — `db/migrations/001_auth.sql`, 앱 계정 `packquest_app@10.0.1.154`, root localhost만 | 권한 S/I/U/D (10/20) |
 | Parameter | /packquest/db-password | SecureString, aws/ssm 키, Standard, 영문·숫자 32자. **단계 11의 CREATE USER에 이 값을 써야 함** | 버전 3 (10/20, 단계 11보다 먼저 생성, 노출 후 교체) |
 | S3 버킷 | packquest-web-1b07b2 | ap-northeast-2, 퍼블릭 액세스 차단 4개 모두 켬, 정적 웹 호스팅 없음, 객체 소유권 BucketOwnerEnforced(ACL 비활성), 기본 암호화 SSE-S3, 버킷 정책 = OAC 허용 1개(cloudfront.amazonaws.com, GetObject, SourceArn=packquest-cf) | arn:aws:s3:::packquest-web-1b07b2 (10/20) |
 | VPC 오리진 | packquest-vpc-origin | 원본 Backend EC2(i-033c073cd3d240ab7), http-only, HTTP 8000 | vo_C1Fa5wzoZhSE0kgfSYx1Fx (10/20) |
 | CloudFront | packquest-cf | 기본→S3(OAC `packquest-oac` E10COFUJ81ZT0M, CachingOptimized), `/api/*`→VPC 오리진(CachingDisabled, AllViewerAndCloudFrontHeaders-2022-06, 메서드 7개), 루트 객체 index.html, Error pages 없음, HTTPS 리디렉션, IPv6 켬 | E1JDVTXZDF4P90 / d1ra4yni7dggze.cloudfront.net (10/20) |
+| 백업(FR-09 전) | packquest_before-fr09_2026-10-21_0111.sql | 스키마 변경 직전, DB 서버 `/home/ssm-user/`, 6.6K, 행 수 trips 1·members 1·items 22 | 10/21 (복원 테스트는 안 함) |
 | 백업 | packquest_YYYY-MM-DD.sql / packquest-db-snap-1022 | 복원 확인 ☐ | |
 
 ---
@@ -312,7 +395,7 @@ sudo mariadb -e "DROP DATABASE packquest_restore_test;"
 - [ ] 구축 절차 순서대로 VPC·서브넷·RT·SG·NAT·EC2 2대를 콘솔로 만들었고 설정값이 기록됨
 - [ ] MariaDB `bind-address` = DB 프라이빗 IP, Backend에서 앱 계정 접속 OK
 - [ ] CloudFront `/api/*` → FastAPI, 나머지 → S3 화면
-- [ ] `/api/*` 원본 요청 정책 일치, `X-Pack-Token` 서버까지 전달, Error pages 없음
+- [ ] `/api/*` 원본 요청 정책 일치, `X-Pack-Token`·`X-Auth-Token`(FR-09) 서버까지 전달, Error pages 없음
 - [ ] 두 서버 프라이빗·공인 IP 없음, 22번 닫힘, SSM으로만 접속
 - [ ] 3306은 sg-app만, root 원격 로그인 차단, 앱 계정 최소 권한
 - [ ] S3 비공개 + OAC로만 접근, 장기 액세스 키 없음
