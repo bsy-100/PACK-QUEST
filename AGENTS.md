@@ -19,7 +19,7 @@
   - DB: EC2에 직접 설치한 MariaDB
   - 인프라: S3·CloudFront, EC2, VPC, NAT Gateway, SSM, Parameter Store
 - React 같은 프레임워크, Docker, Kubernetes, IaC(Terraform·CloudFormation), CI/CD, RDS, 새로운 기능을 임의로 추가하지 않는다.
-- MVP는 FR-01~07이다. FR-08(캐리어 완성도)은 사용자가 요청할 때만 한다. 향후 확장 항목은 구현하지 않는다(로그인, WebSocket, AI 추천, 날씨 API, 자동 만료).
+- MVP는 FR-01~07이다. FR-08(캐리어 완성도)은 사용자가 요청할 때만 한다. 향후 확장 항목은 구현하지 않는다(WebSocket, AI 추천, 날씨 API, 자동 만료). 로그인은 선택 기능으로 10/21 팀 결정에 따라 추가했다(`docs/API_AUTH.md`).
 - 기존 정상 기능과 API 계약을 유지하고, 요청 범위를 벗어난 파일은 변경하지 않는다.
 - 큰 기능은 작은 작업으로 나누고 현재 작업부터 구현한다.
 - 새 패키지가 필요하면 목적을 설명하고 `requirements.txt`에 기록한다.
@@ -47,7 +47,7 @@
 
 ## API와 코드 규칙
 - 모든 API 경로는 `/api` 아래에 둔다. `/api/health`는 토큰 없이 응답한다.
-- 토큰은 `X-Pack-Token` 헤더로만 주고받는다. `Authorization` 헤더는 쓰지 않는다.
+- 여행 토큰은 `X-Pack-Token`, 로그인 토큰은 `X-Auth-Token` 헤더로만 주고받는다. `Authorization` 헤더는 쓰지 않는다.
 - 오류는 `{"detail": {"code": "...", "message": "..."}}` 형식의 JSON으로 돌려준다.
 - 화면은 API를 상대 경로(`/api/...`)로 호출한다. 갱신은 5초 간격 폴링으로 하고, 토큰은 여행 코드별로 브라우저에 보관한다.
 - 요청 제한의 사용자 구분은 `CloudFront-Viewer-Address` 헤더에서 포트를 뺀 IP로 한다.
@@ -68,7 +68,7 @@
 - 앱 DB 계정에는 `packquest` DB의 SELECT, INSERT, UPDATE, DELETE만 준다. root 원격 접속은 열지 않는다.
 - 사용자 입력(닉네임, 항목 이름)은 실행 가능한 HTML로 넣지 않고 글자로 표시한다(`textContent` 사용).
 - 입력값 검증은 화면과 서버 양쪽에 적용한다.
-- 개인정보는 닉네임만 저장한다.
+- 개인정보는 닉네임과 (로그인 사용자의) 아이디만 저장한다. 비밀번호는 scrypt 해시로만 저장한다.
 - 기존 데이터·테이블·AWS 리소스를 임의로 삭제하거나 초기화하지 않는다. 삭제는 PLAN의 발표 후 삭제 순서(단계 19)를 사용자가 요청할 때만 안내한다.
 
 ## 오류 분석과 검증
