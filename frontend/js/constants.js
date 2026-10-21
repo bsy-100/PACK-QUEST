@@ -54,12 +54,20 @@ PQ.ERROR_MESSAGES = {
   HOST_ONLY: "주최자만 할 수 있어요.",
   NOT_ALLOWED: "자기 자신에게만 배정할 수 있어요.",
   NOT_YOUR_ITEM: "담당자만 체크할 수 있어요.",
+  USERNAME_TAKEN: "이미 있는 아이디예요.",
+  LOGIN_FAILED: "아이디 또는 비밀번호가 맞지 않아요.",
+  AUTH_MISSING: "다시 로그인해 주세요.",
+  AUTH_INVALID: "로그인이 만료됐어요. 다시 로그인해 주세요.",
+  ALREADY_JOINED: "이미 참여한 여행이에요. 내 여행에서 다시 들어가 주세요.",
   RATE_LIMITED: "잠시 후 다시 시도해 주세요.",
   SERVER_ERROR: "일시적인 오류예요. 다시 시도해 주세요.",
 };
 
 // 이 코드를 받으면 저장한 토큰을 지우고 입장 화면으로 보낸다.
 PQ.REENTER_CODES = ["TOKEN_MISSING", "TOKEN_INVALID", "TRIP_NOT_FOUND"];
+
+// 이 코드를 받으면 저장한 로그인 정보를 지우고 로그인 화면으로 보낸다.
+PQ.AUTH_CODES = ["AUTH_MISSING", "AUTH_INVALID"];
 
 PQ.POLL_INTERVAL_MS = 5000;
 
@@ -68,6 +76,10 @@ PQ.LIMITS = {
   nicknameMax: 20,
   itemNameMax: 50,
   codeLength: 8,
+  usernameMin: 4,
+  usernameMax: 20,
+  passwordMin: 8,
+  passwordMax: 64,
 };
 
 PQ.errorMessage = function (code) {

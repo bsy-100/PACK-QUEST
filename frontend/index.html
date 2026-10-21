@@ -11,7 +11,15 @@
 <body>
   <header class="topbar">
     <a href="./" class="brand" id="brand-link"><span class="brand__icon" aria-hidden="true">🧳</span>PACK QUEST</a>
-    <span class="mock-badge" id="mock-badge" hidden>체험 모드 · 임시 데이터</span>
+    <div class="topbar__right">
+      <span class="mock-badge" id="mock-badge" hidden>체험 모드 · 임시 데이터</span>
+      <!-- 로그인은 선택: 로그인 전에는 "로그인", 로그인 후에는 닉네임과 "로그아웃" -->
+      <div class="auth-bar" id="auth-bar">
+        <span class="auth-user" id="auth-user" hidden></span>
+        <button type="button" class="btn btn--small" id="login-open" data-go="login">로그인</button>
+        <button type="button" class="btn btn--small btn--ghost" id="logout-btn" hidden>로그아웃</button>
+      </div>
+    </div>
   </header>
 
   <!-- 오류 안내: API 실패 시 메시지와 재시도 버튼 -->
@@ -51,6 +59,12 @@
         <button type="button" class="btn btn--sky btn--large" data-go="join">🎫 초대 코드로 합류</button>
       </div>
 
+      <!-- 로그인하지 않았을 때만 보이는 안내 -->
+      <p class="login-hint" id="login-hint">
+        <span>💡 로그인하면 다른 기기에서도 내 여행을 이어서 열 수 있어요. 로그인 없이도 쓸 수 있어요.</span>
+        <button type="button" class="btn btn--small btn--ghost" data-go="login">로그인·가입</button>
+      </p>
+
       <ol class="steps" aria-label="이렇게 진행돼요">
         <li class="step"><span class="step__icon" aria-hidden="true">🗺️</span><strong>여행 고르기</strong><span>국내·해외, 기간, 계절</span></li>
         <li class="step"><span class="step__icon" aria-hidden="true">👫</span><strong>크루 초대</strong><span>코드 하나로 합류</span></li>
@@ -61,6 +75,49 @@
         <h2 class="card__title">🎫 내 여행 티켓</h2>
         <ul class="my-trips" id="my-trips"></ul>
       </div>
+    </section>
+
+    <!-- 로그인·가입 (선택 기능) -->
+    <section class="view" id="view-auth" hidden>
+      <div class="view-head">
+        <p class="eyebrow">내 여행 보관함</p>
+        <h1 class="view__title" id="auth-title">로그인</h1>
+        <p class="view__sub">로그인하면 다른 기기에서도 내 여행을 다시 열 수 있어요. 비밀번호는 서버에 안전하게 보관돼요.</p>
+      </div>
+      <form class="card form" id="auth-form" novalidate>
+        <div class="tabs" role="tablist" aria-label="로그인 또는 가입">
+          <button type="button" class="tab" role="tab" id="auth-tab-login" aria-selected="true">로그인</button>
+          <button type="button" class="tab" role="tab" id="auth-tab-signup" aria-selected="false">처음이에요 (가입)</button>
+        </div>
+        <label class="field">
+          <span class="field__label">아이디</span>
+          <input type="text" name="username" maxlength="20" autocomplete="username" autocapitalize="none"
+                 spellcheck="false" placeholder="영문·숫자·밑줄 4~20자" required>
+          <span class="field__error" id="auth-error-username" role="alert" hidden></span>
+        </label>
+        <label class="field">
+          <span class="field__label">비밀번호</span>
+          <input type="password" name="password" maxlength="64" autocomplete="current-password"
+                 placeholder="8~64자" required>
+          <span class="field__error" id="auth-error-password" role="alert" hidden></span>
+        </label>
+        <label class="field" id="auth-password2-field" hidden>
+          <span class="field__label">비밀번호 확인</span>
+          <input type="password" name="password2" maxlength="64" autocomplete="new-password"
+                 placeholder="비밀번호를 한 번 더 입력">
+          <span class="field__error" id="auth-error-password2" role="alert" hidden></span>
+        </label>
+        <label class="field" id="auth-nickname-field" hidden>
+          <span class="field__label">기본 닉네임</span>
+          <input type="text" name="nickname" maxlength="20" autocomplete="off" placeholder="1~20자, 여행 만들 때 미리 채워져요">
+          <span class="field__error" id="auth-error-nickname" role="alert" hidden></span>
+        </label>
+        <p class="form__error" id="auth-error" hidden></p>
+        <div class="form__actions">
+          <button type="button" class="btn" data-go="home">돌아가기</button>
+          <button type="submit" class="btn btn--primary" id="auth-submit">로그인</button>
+        </div>
+      </form>
     </section>
 
     <!-- 2. 여행 만들기 -->

@@ -15,6 +15,7 @@
     tab: "shared",     // "shared"(같이 챙길 짐) 또는 "personal"(내 가방)
     prevShared: null,  // 직전에 그린 같이 챙길 짐 상태 {rate, complete, done} — 축하·애니메이션용
     prevPersonal: null,
+    authMode: "login", // 로그인 화면의 "login" 또는 "signup"
   };
 
   /* ---------- 공통 도우미 ---------- */
@@ -102,7 +103,7 @@
 
   /* ---------- 화면 전환 ---------- */
 
-  const VIEWS = ["home", "create", "join", "trip"];
+  const VIEWS = ["home", "auth", "create", "join", "trip"];
 
   function showView(name) {
     VIEWS.forEach((v) => { $("view-" + v).hidden = v !== name; });
@@ -115,12 +116,129 @@
     state.code = null;
     state.data = null;
     setUrlCode(null);
+    renderAuthBar();
     renderMyTrips();
     showView("home");
   }
 
+  /* ---------- 로그인·가입 (선택 기능) ---------- */
+
+  // 상단 바: 로그인 전에는 "로그인", 로그인 후에는 닉네임과 "로그아웃"
+  function renderAuthBar() {
+    const user = PQ.authStore.user();
+    const loggedIn = PQ.authStore.isLoggedIn();
+    $("auth-user").hidden = !loggedIn;
+    $("auth-user").textContent = loggedIn ? `👤 ${(user && user.nickname) || (user && user.username) || "내 계정"}` : "";
+    $("login-open").hidden = loggedIn;
+    $("logout-btn").hidden = !loggedIn;
+    $("login-hint").hidden = loggedIn;
+  }
+
+  function setAuthMode(mode) {
+    state.authMode = mode;
+    const signup = mode === "signup";
+    $("auth-tab-login").setAttribute("aria-selected", String(!signup));
+    $("auth-tab-signup").setAttribute("aria-selected", String(signup));
+    $("auth-title").textContent = signup ? "가입하기" : "로그인";
+    $("auth-submit").textContent = signup ? "가입하고 시작" : "로그인";
+    $("auth-nickname-field").hidden = !signup;
+    $("auth-password2-field").hidden = !signup;
+    $("auth-form").elements.password2.value = "";
+    $("auth-form").elements.password.autocomplete = signup ? "new-password" : "current-password";
+    clearAuthErrors();
+  }
+
+  // 오류는 해당 입력칸 바로 아래에 띄운다. 어느 칸의 문제가 아닌 오류는 맨 아래 안내 칸에 띄운다.
+  const AUTH_FIELDS = ["username", "password", "password2", "nickname"];
+
+  function showFieldError(name, message) {
+    const node = $("auth-error-" + name);
+    node.textContent = message || "";
+    node.hidden = !message;
+    $("auth-form").elements[name].setAttribute("aria-invalid", message ? "true" : "false");
+  }
+
+  function clearAuthErrors() {
+    AUTH_FIELDS.forEach((name) => showFieldError(name, ""));
+    showFormError("auth-error", "");
+  }
+
+  function goAuth(mode) {
+    $("auth-form").reset();
+    setAuthMode(mode || "login");
+    showView("auth");
+    $("auth-form").elements.username.focus();
+  }
+
+  async function onAuth(event) {
+    event.preventDefault();
+    const form = event.target;
+    const signup = state.authMode === "signup";
+    const username = form.elements.username.value.trim();
+    const password = form.elements.password.value;
+    const nickname = form.elements.nickname.value.trim();
+
+    // 틀린 칸마다 그 칸 아래에 안내를 띄운다(한 번에 모두 보여준다).
+    const L = PQ.LIMITS;
+    const problems = {};
+    if (!/^[A-Za-z0-9_]+$/.test(username) || username.length < L.usernameMin || username.length > L.usernameMax) {
+      problems.username = `아이디는 영문·숫자·밑줄 ${L.usernameMin}~${L.usernameMax}자로 입력해 주세요.`;
+    }
+    if (password.length < L.passwordMin || password.length > L.passwordMax) {
+      problems.password = `비밀번호는 ${L.passwordMin}~${L.passwordMax}자로 입력해 주세요.`;
+    } else if (signup && password !== form.elements.password2.value) {
+      problems.password2 = "비밀번호가 서로 달라요. 같은 비밀번호를 두 번 입력해 주세요.";
+    }
+    if (signup && (!nickname || nickname.length > L.nicknameMax)) {
+      problems.nickname = `닉네임은 1~${L.nicknameMax}자로 입력해 주세요.`;
+    }
+
+    clearAuthErrors();
+    const firstBad = AUTH_FIELDS.find((name) => problems[name]);
+    if (firstBad) {
+      AUTH_FIELDS.forEach((name) => showFieldError(name, problems[name]));
+      form.elements[firstBad].focus();
+      return;
+    }
+
+    const submit = $("auth-submit");
+    submit.disabled = true;
+    try {
+      const res = signup
+        ? await PQ.api.signup({ username, password, nickname })
+        : await PQ.api.login({ username, password });
+      toast(signup ? `가입했어요! ${res.user.nickname}님, 환영해요.` : `${res.user.nickname}님, 다시 만나서 반가워요!`);
+      goHome();
+    } catch (err) {
+      // 서버가 알려 준 오류도 관련된 칸 아래에 띄운다.
+      if (err.code === "USERNAME_TAKEN") showFieldError("username", err.message);
+      else if (err.code === "LOGIN_FAILED") showFieldError("password", err.message);
+      else showFormError("auth-error", err.message);
+    } finally {
+      submit.disabled = false;
+    }
+  }
+
+  async function onLogout() {
+    try {
+      await PQ.api.logout();
+    } catch (err) {
+      // 서버 호출이 실패해도 api.logout()이 이 기기의 로그인 정보는 지운다.
+    }
+    toast("로그아웃했어요. 이 기기에 저장된 여행은 그대로 열 수 있어요.");
+    renderAuthBar();
+    if (!$("view-home").hidden) renderMyTrips();
+  }
+
+  // 로그인 상태면 계정의 기본 닉네임을 닉네임 칸에 미리 채워 준다.
+  function defaultNickname() {
+    const user = PQ.authStore.user();
+    return user && user.nickname ? user.nickname : "";
+  }
+
   function goCreate() {
     $("create-form").reset();
+    $("create-form").elements.nickname.value = defaultNickname();
     showFormError("create-error", "");
     showView("create");
   }
@@ -128,6 +246,7 @@
   function goJoin(prefillCode) {
     $("join-form").reset();
     $("join-form").elements.code.value = prefillCode || "";
+    $("join-form").elements.nickname.value = defaultNickname();
     showFormError("join-error", "");
     showView("join");
     (prefillCode ? $("join-form").elements.nickname : $("join-form").elements.code).focus();
@@ -135,8 +254,40 @@
 
   /* ---------- 시작 화면: 내 여행 티켓 ---------- */
 
+  // 이 기기에 저장된 여행(토큰이 있는 여행)을 먼저 그리고, 로그인 상태면 서버의 "내 여행"을 합쳐 다시 그린다.
   function renderMyTrips() {
-    const trips = PQ.tokenStore.list();
+    const local = PQ.tokenStore.list().map((t) => ({ ...t, here: true }));
+    drawMyTrips(local);
+    if (!PQ.authStore.isLoggedIn()) return;
+    loadAccountTrips(local);
+  }
+
+  async function loadAccountTrips(local) {
+    try {
+      const res = await PQ.api.me();
+      if ($("view-home").hidden) return; // 그사이 다른 화면으로 이동했다
+      // 서버 목록 + 계정에 연결되지 않은(로그인 전에 만든) 이 기기의 여행
+      const known = new Set(res.trips.map((t) => t.code));
+      const merged = res.trips.map((t) => ({
+        code: t.code,
+        nickname: t.me.nickname,
+        isHost: t.me.is_host,
+        rate: t.progress.rate,
+        here: !!PQ.tokenStore.get(t.code),
+      }));
+      local.filter((t) => !known.has(t.code)).forEach((t) => merged.push(t));
+      drawMyTrips(merged);
+    } catch (err) {
+      if (PQ.AUTH_CODES.includes(err.code)) {
+        // 로그인 토큰이 만료됐다(api.js가 저장한 로그인 정보는 이미 지웠다).
+        renderAuthBar();
+        toast(err.message);
+      }
+      // 그 밖의 오류는 이 기기에 저장된 목록을 그대로 보여준다.
+    }
+  }
+
+  function drawMyTrips(trips) {
     const list = $("my-trips");
     list.replaceChildren();
     trips.forEach((t) => {
@@ -146,15 +297,35 @@
 
       const left = el("span", "trip-ticket__main");
       left.append(el("strong", "trip-ticket__code", t.code));
+      const rate = typeof t.rate === "number" ? ` · ${t.rate}% 챙김` : "";
       left.append(el("span", "trip-ticket__who",
-        `${t.nickname || "닉네임 없음"}${t.isHost ? " · 👑 주최자" : ""}`));
+        `${t.nickname || "닉네임 없음"}${t.isHost ? " · 👑 주최자" : ""}${rate}`));
 
-      btn.append(left, el("span", "trip-ticket__go", "이어서 짐싸기 →"));
-      btn.addEventListener("click", () => openTrip(t.code));
+      // 이 기기에 입장 정보가 없으면(다른 기기에서 열었던 여행) 눌렀을 때 다시 들어오기를 한다.
+      btn.append(left, el("span", "trip-ticket__go", t.here ? "이어서 짐싸기 →" : "이 기기에서 열기 →"));
+      btn.addEventListener("click", () => (t.here ? openTrip(t.code) : reenterTrip(t.code, btn)));
       li.append(btn);
       list.append(li);
     });
     $("my-trips-card").hidden = trips.length === 0;
+  }
+
+  // 다른 기기에서 다시 들어가기(A5). 새 여행 토큰이 발급되면 예전 기기의 입장 정보는 무효가 된다.
+  async function reenterTrip(code, button) {
+    if (button) button.disabled = true;
+    try {
+      await PQ.api.reenter(code);
+      toast("이 기기에서 열었어요. 다른 기기에서는 나가게 돼요.");
+      openTrip(code);
+    } catch (err) {
+      if (PQ.AUTH_CODES.includes(err.code)) {
+        renderAuthBar();
+        renderMyTrips();
+      }
+      toast(err.message);
+    } finally {
+      if (button) button.disabled = false;
+    }
   }
 
   /* ---------- 여행 만들기 ---------- */
@@ -181,6 +352,7 @@
       toast("새 여행이 시작됐어요! 초대 코드를 친구들에게 보내 주세요.");
       openTrip(res.code);
     } catch (err) {
+      if (PQ.AUTH_CODES.includes(err.code)) renderAuthBar(); // 로그인이 만료돼 api.js가 로그인 정보를 지웠다
       showFormError("create-error", err.message);
     } finally {
       submit.disabled = false;
@@ -210,6 +382,19 @@
       toast("탑승 완료! 함께 짐을 챙겨 봐요.");
       openTrip(res.code);
     } catch (err) {
+      if (err.code === "ALREADY_JOINED") {
+        // 이 계정으로 이미 참여한 여행이다. 직접 코드를 넣은 것이므로 이 기기에서 다시 들어간다.
+        try {
+          await PQ.api.reenter(code);
+          toast("이미 참여한 여행이에요. 이 기기에서 열었어요.");
+          return openTrip(code);
+        } catch (err2) {
+          return showFormError("join-error", err2.message);
+        } finally {
+          submit.disabled = false;
+        }
+      }
+      if (PQ.AUTH_CODES.includes(err.code)) renderAuthBar();
       showFormError("join-error", err.message);
     } finally {
       submit.disabled = false;
@@ -273,6 +458,13 @@
       stopPolling();
       state.code = null; // 이후 load()가 토큰 없이 다시 부르지 않게
       state.data = null;
+      if (PQ.authStore.isLoggedIn() && err.code !== "TRIP_NOT_FOUND") {
+        // 로그인 상태: 다른 기기에서 다시 들어가 이 기기의 입장 정보가 무효가 됐거나 여행이 삭제됐다.
+        // 자동으로 다시 들어가면 두 기기가 서로를 계속 쫓아내므로, 내 여행에서 직접 고르게 한다.
+        toast("다른 기기에서 접속했거나 여행이 삭제됐어요. 내 여행에서 다시 열 수 있어요.");
+        goHome();
+        return;
+      }
       toast("여행이 삭제됐거나 입장 정보가 없어요. " + err.message);
       goJoin(code);
       return;
@@ -719,8 +911,17 @@
         if (to === "home") goHome();
         else if (to === "create") goCreate();
         else if (to === "join") goJoin();
+        else if (to === "login") goAuth("login");
       });
     });
+    $("auth-tab-login").addEventListener("click", () => setAuthMode("login"));
+    $("auth-tab-signup").addEventListener("click", () => setAuthMode("signup"));
+    $("auth-form").addEventListener("submit", onAuth);
+    // 고치기 시작하면 그 칸의 오류는 바로 지운다.
+    AUTH_FIELDS.forEach((name) => {
+      $("auth-form").elements[name].addEventListener("input", () => showFieldError(name, ""));
+    });
+    $("logout-btn").addEventListener("click", onLogout);
     $("brand-link").addEventListener("click", (e) => { e.preventDefault(); goHome(); });
 
     $("create-form").addEventListener("submit", onCreate);
@@ -737,6 +938,7 @@
     });
 
     // 주소에 ?code=가 있으면 그 여행을 연다(토큰이 없으면 참여 화면에 코드를 채워 둔다).
+    renderAuthBar();
     const code = PQ.normalizeCode(new URLSearchParams(location.search).get("code"));
     if (code) openTrip(code);
     else goHome();

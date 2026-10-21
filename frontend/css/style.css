@@ -101,8 +101,42 @@ h1, h2, p { margin: 0; }
 }
 .brand:hover .brand__icon { transform: rotate(-8deg) scale(1.06); }
 
-.mock-badge {
+.topbar__right {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  min-width: 0;
+}
+.auth-bar { display: flex; align-items: center; gap: 6px; }
+.auth-user {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--mint);
+}
+.login-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 10px 14px;
+  border: 1.5px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.mock-badge {
   font-size: 12px;
   font-weight: 700;
   padding: 4px 10px;
@@ -208,7 +242,7 @@ h1, h2, p { margin: 0; }
 .btn--large { min-height: 60px; font-size: 18px; border-radius: 22px; }
 .btn--block { width: 100%; }
 
-input[type="text"], input[type="date"], select {
+input[type="text"], input[type="password"], input[type="date"], select {
   width: 100%;
   min-height: 48px;
   padding: 0 14px;
@@ -220,8 +254,8 @@ input[type="text"], input[type="date"], select {
   font-size: 16px;             /* 16px 미만이면 iOS가 화면을 확대한다 */
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-input[type="text"]::placeholder { color: #A7AEBB; }
-input[type="text"]:focus, input[type="date"]:focus, select:focus {
+input[type="text"]::placeholder, input[type="password"]::placeholder { color: #A7AEBB; }
+input[type="text"]:focus, input[type="password"]:focus, input[type="date"]:focus, select:focus {
   outline: none;
   border-color: var(--sky-deep);
   box-shadow: 0 0 0 4px rgba(111, 184, 227, 0.25);
@@ -284,6 +318,10 @@ input.input--code::placeholder { letter-spacing: 0.05em; font-size: 16px; font-w
 }
 .choice__options input:checked + span i { animation: wiggle 0.45s var(--ease-pop); }
 .choice__options input:focus-visible + span { outline: 3px solid var(--sky-deep); outline-offset: 2px; }
+
+/* 입력칸 바로 아래에 뜨는 오류 */
+.field__error { font-size: 13px; font-weight: 700; color: var(--danger); }
+input[aria-invalid="true"] { border-color: var(--coral-deep); background: var(--danger-soft); }
 
 .form__error {
   padding: 10px 14px;
