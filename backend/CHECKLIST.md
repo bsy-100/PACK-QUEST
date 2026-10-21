@@ -114,19 +114,19 @@
 
 - [x] A: S3 버킷 `packquest-web-1b07b2`(10/20)
 - [x] A: CloudFront VPC 오리진, `sg-app`에 CloudFront에서 오는 8000번 허용, `/api/*` 동작(원본 요청 정책 `Managed-AllViewerAndCloudFrontHeaders-2022-06`, 사용자 지정 오류 응답 없음) — 10/20 앞당겨 완료, `https://d1ra4yni7dggze.cloudfront.net`
-- [ ] C: 화면 S3 업로드 — 10/20 디자인 개편본까지 올라가 있음, 최종본 업로드는 남음
+- [x] C: 화면 S3 업로드 — 디자인 개편 + 로그인 화면 최종본(PR #7) 업로드 완료(10/21)
 
 ### 내 할 일
 
 - [x] `DEPLOY.md` 순서대로 배포: 패키지 → 코드(https, 공개 저장소) → 설정 파일 → 연결 확인 → systemd — 10/20에 앞당겨 완료(코드는 A가 Deploy key로 받음), 재부팅 후 자동 시작 확인
 - [x] 서버 안에서 `python3 tests/smoke_test.py http://127.0.0.1:8000/api` 통과 — 43/43(10/20)
 - [x] CloudFront 연결 후 `python3 tests/smoke_test.py https://d1ra4yni7dggze.cloudfront.net/api` 통과 — 43/43(10/20, B PC에서)
-- [ ] C와 화면·API 연동 확인: 여행 만들기 → 참여 → 맡기 → 체크 → 진행률 → 삭제
+- [x] C와 화면·API 연동 확인: 여행 만들기 → 참여 → 맡기 → 체크 → 진행률 → 삭제 — PC·휴대폰으로 비로그인 흐름, 로그인 후 다른 기기에서 열기(주최자 권한 유지, 처음 기기에 안내)까지 확인(10/21)
 - [x] `X-Pack-Token`, `CloudFront-Viewer-Address`가 들어오는지 확인(요청 제한 IP 구분) — 토큰 API 테스트 통과, 가짜 `CloudFront-Viewer-Address`를 보내도 CloudFront가 실제 IP로 바꿔 넣어 B PC IP로 제한됨(10/21)
 - [ ] 배포한 사람·시간·커밋을 팀 채팅에 기록
 - [x] (추가) 로그인(선택) API — 팀 제안에 맞춰 구현, PR #6 merge, 명세 원본에 "로그인 API" 절, C용 `docs/API_AUTH.md`(10/21)
 - [x] (추가) 로그인 서버 반영: DB 서버 마이그레이션 `db/migrations/001_auth.sql` → Backend `git pull`·재시작 → CloudFront 경유 기존 테스트 43/43, 로그인 테스트 32/33(마지막 요청 제한 항목은 실제 IP로 세어져 실패하는 것이 정상)
-- [ ] C: 로그인·회원가입, "내 여행" 목록 화면
+- [x] C: 로그인·회원가입, "내 여행" 목록 화면 — PR #7 merge(10/21)
 
 ### 오늘 본 오류
 
