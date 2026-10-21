@@ -307,7 +307,7 @@ sudo mariadb -e "SELECT COUNT(*) FROM packquest.members;"   # L1과 같은 수
 ### 단계 16 — 전체 흐름 (A·B·C)
 - [x] CloudFront 도메인에서 여행 생성 → 참여 → 체크 → 진행률 → 삭제 끝까지 — 10/21 사용자 확인(새 화면 f4518ca, 휴대폰 합류 포함)
 - [x] 3일 차 저녁: 진행 상황 보고 FR-08(선택) 진행 여부 결정 — 10/21 선택 기능으로 **FR-09 회원가입·로그인**을 진행해 배포·확인까지 완료(위 "FR-09 — A 담당"). FR-08(캐리어 완성도)도 C가 화면 개편(c5855f1, main f4518ca에 포함)에서 구현해 10/21 배포됨: 팀 진행률만큼 캐리어 SVG가 차오르고 체크하면 바뀜(새 API 없음)
-- [ ] 기록표 3일 차 칸 채우기
+- [x] 기록표 3일 차 칸 채우기 — 10/21 조회로 기록표와 실제 설정 대조: CloudFront `E1JDVTXZDF4P90` Deployed, 루트 객체 index.html, Error pages 0개, HTTPS 리디렉션, IPv6 켬, `/api/*` → `vpc-packquest-backend`(CachingDisabled `4135ea2d…`, AllViewerAndCloudFrontHeaders-2022-06 `33f36d7e…`, 메서드 7개), S3 원본 OAC `E10COFUJ81ZT0M`. VPC 오리진 Deployed(Backend 인스턴스, HTTP 8000, http-only). sg-app 인바운드 8000 ← `sg-01f21584ac34ee388`만(IP·접두사 목록 없음). S3 정책 = cloudfront.amazonaws.com GetObject + SourceArn E1JDVTXZDF4P90 1개, 퍼블릭 차단 4개 True. 모두 기록표와 일치, 고칠 값 없음
 
 ### 막히면 — VPC 오리진 체크리스트
 리전 지원(서울 OK) → IGW 연결 → Backend 실행 중 → uvicorn `0.0.0.0` → sg-app 허용 규칙 → 원본 도메인(프라이빗 IP DNS) → 프라이빗 서브넷 여유 IPv4.
