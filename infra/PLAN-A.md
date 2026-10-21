@@ -267,6 +267,12 @@ sudo mariadb -e "SELECT COUNT(*) FROM packquest.members;"   # L1과 같은 수
 - [x] 서버 로그에 비밀번호·토큰 원문 없음 — 10/21 사용자가 `journalctl … | grep -i -E "password|token"` 실행: 걸린 줄은 경로 이름(`/api/me/trips/<code>/token`)뿐이고 값 없음. B의 `app/logs.py`도 요청 줄에 메서드·경로(쿼리 제외)·상태·시간·IP·오류 코드만, 사건 줄에 아이디·닉네임만 남김(헤더·본문 기록 없음)
 - [x] 기존 흐름 그대로 동작: 비로그인 생성 201·합류 201·조회 200·주최자 삭제 204. 로그인 상태 생성 → 내 여행 목록에 주최자로 표시 → 다시 들어가기로 새 토큰 200, 예전 `X-Pack-Token` 401 — 10/21 (항목 체크는 이번에 안 함)
 
+**화면 업로드(C 요청, 10/21 11:07 KST, 에이전트 CLI)**
+- [x] 기준 origin/main `f4518ca`(PR #7, 화면 디자인 + 로그인), `docs/frontend-deploy.md` 2→3→4→5. 3·4단계는 콘솔 대신 CLI(`aws s3 cp --recursive`, `create-invalidation /*`, 사용자 확인 후 실행)
+- [x] 조회 확인: 버킷에 7개만(index.html, css/style.css, js/ 5개), Content-Type html·css·javascript, 무효화 `I6OUO9IDYZTDWZZA8QA3QQUTR7` Completed. CloudFront로 받은 7개 파일 해시가 업로드본과 같음, `/` 200, `/api/health` 200 JSON, 없는 코드 합류 404 JSON `TRIP_NOT_FOUND`, `/CHECKLIST.md` 403(올라가지 않음)
+- [x] 5단계 4번(실제 API로 만들기→맡기→체크→진행률, 휴대폰 합류)·6번(로그인 후 다른 기기에서 "이 기기에서 열기", 주최자 권한·처음 기기 안내) — 10/21 사용자 확인
+- [x] 5단계 5번(로그인 없이 4번 흐름) — 10/21 사용자 확인
+
 **L5. 기록**
 - [x] 리소스 기록표 MariaDB 행 갱신(users·sessions, members.user_id) — 10/21
 - [x] 보안 슬라이드 재료 정리(아래) — 10/21. 모두 실제 코드(main 50b2e8e)와 L4 확인 결과에 근거한 내용만 적음
