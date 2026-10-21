@@ -122,8 +122,18 @@
 - [x] 서버 안에서 `python3 tests/smoke_test.py http://127.0.0.1:8000/api` 통과 — 43/43(10/20)
 - [x] CloudFront 연결 후 `python3 tests/smoke_test.py https://d1ra4yni7dggze.cloudfront.net/api` 통과 — 43/43(10/20, B PC에서)
 - [ ] C와 화면·API 연동 확인: 여행 만들기 → 참여 → 맡기 → 체크 → 진행률 → 삭제
-- [ ] 서버 로그에서 `X-Pack-Token`, `CloudFront-Viewer-Address`가 들어오는지 확인(요청 제한 IP 구분)
+- [x] `X-Pack-Token`, `CloudFront-Viewer-Address`가 들어오는지 확인(요청 제한 IP 구분) — 토큰 API 테스트 통과, 가짜 `CloudFront-Viewer-Address`를 보내도 CloudFront가 실제 IP로 바꿔 넣어 B PC IP로 제한됨(10/21)
 - [ ] 배포한 사람·시간·커밋을 팀 채팅에 기록
+- [x] (추가) 로그인(선택) API — 팀 제안에 맞춰 구현, PR #6 merge, 명세 원본에 "로그인 API" 절, C용 `docs/API_AUTH.md`(10/21)
+- [x] (추가) 로그인 서버 반영: DB 서버 마이그레이션 `db/migrations/001_auth.sql` → Backend `git pull`·재시작 → CloudFront 경유 기존 테스트 43/43, 로그인 테스트 32/33(마지막 요청 제한 항목은 실제 IP로 세어져 실패하는 것이 정상)
+- [ ] C: 로그인·회원가입, "내 여행" 목록 화면
+
+### 오늘 본 오류
+
+| 오류 | 뜻 |
+|---|---|
+| 재시작 후 DB를 쓰는 API 전부 500, 로그에 `2003 Can't connect ... '<DB 사설 IP>'` | 서버 설정의 `DB_HOST`에 예시 문구가 들어가 있었다. 실행 중인 서비스는 예전 값을 쓰다가 로그인 배포로 재시작하면서 드러남. A가 찾아 수정 |
+| 마이그레이션 전에 새 코드를 띄우면 500 | 순서는 DB 마이그레이션 먼저 → Backend 배포(`DEPLOY.md` 8절) |
 
 ---
 
