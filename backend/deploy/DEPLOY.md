@@ -100,6 +100,18 @@ git log --oneline -1                                        # 커밋 번호
 
 배포한 사람, 시간, 커밋 번호를 팀 채팅에 남긴다.
 
+### DB가 바뀌는 업데이트 (`db/migrations/`)
+
+**DB 서버**에서 먼저 실행하고, 그다음 위 순서로 Backend를 배포한다. 마이그레이션은 기존 코드와도 같이 동작하고(새 칸은 NULL 허용), 두 번 실행해도 안전하다. 반대 순서로 하면 새 코드가 없는 칸을 써서 여행 만들기가 500이 된다.
+
+```bash
+# DB 서버(packquest-db)에 SSM 접속 후. main에 합쳐진 뒤의 파일을 받는다.
+curl -fsSL https://raw.githubusercontent.com/bsy-100/PACK-QUEST/main/db/migrations/001_auth.sql | sudo mariadb
+sudo mariadb -e "SHOW TABLES FROM packquest; SHOW COLUMNS FROM packquest.members LIKE 'user_id';"
+```
+
+`users`, `sessions` 테이블과 `members.user_id` 칸이 보이면 된다. 앱 계정 권한은 `packquest` DB 전체에 걸려 있으면 새 테이블도 그대로 쓸 수 있다(`SHOW GRANTS FOR 'packquest_app'@'10.0.1.154';`에서 `ON packquest.*`인지 확인).
+
 ## 로그 보기 (데모 중에도)
 
 ```bash

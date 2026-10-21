@@ -2,7 +2,7 @@ import pymysql
 from fastapi import APIRouter, Depends, Response
 
 from app import recommend, security
-from app.auth import CurrentMember, host_only
+from app.auth import CurrentMember, OptionalUser, host_only
 from app.db import Db
 from app.errors import ApiError
 from app.items import ITEM_COLUMNS, to_item
@@ -18,16 +18,19 @@ def _is_duplicate(exc: pymysql.err.IntegrityError, key: str) -> bool:
     return exc.args[0] == DUPLICATE_KEY and key in str(exc.args[1])
 
 
-def _insert_member(cur, code: str, nickname: str, is_host: bool) -> tuple[int, str]:
+def _insert_member(cur, code: str, nickname: str, is_host: bool, user_id: int | None) -> tuple[int, str]:
     token = security.new_token()
     try:
         cur.execute(
-            "INSERT INTO members (trip_code, nickname, token_hash, is_host) VALUES (%s, %s, %s, %s)",
-            (code, nickname, security.hash_token(token), is_host),
+            "INSERT INTO members (trip_code, nickname, token_hash, is_host, user_id) VALUES (%s, %s, %s, %s, %s)",
+            (code, nickname, security.hash_token(token), is_host, user_id),
         )
     except pymysql.err.IntegrityError as exc:
         if _is_duplicate(exc, "uq_members_nickname"):
             raise ApiError(409, "NICKNAME_TAKEN", "이미 쓰는 닉네임입니다.") from exc
+        if _is_duplicate(exc, "uq_members_user"):
+            # 로그인한 계정은 여행마다 한 번만 참여한다. 다른 기기라면 POST /api/me/trips/{code}/token
+            raise ApiError(409, "ALREADY_JOINED", "이미 참여한 여행입니다.") from exc
         raise
     return cur.lastrowid, token
 
@@ -38,7 +41,7 @@ def _insert_member(cur, code: str, nickname: str, is_host: bool) -> tuple[int, s
     response_model=TripCreated,
     dependencies=[Depends(security.create_trip_limit)],
 )
-def create_trip(body: TripCreate, db: Db):
+def create_trip(body: TripCreate, db: Db, user: OptionalUser):
     with db.cursor() as cur:
         # 명세 "공유 코드": 기본 키가 겹치면 새로 뽑아 다시 넣는다.
         for _ in range(5):
@@ -55,7 +58,7 @@ def create_trip(body: TripCreate, db: Db):
         else:
             raise RuntimeError("공유 코드 생성 실패")
 
-        member_id, token = _insert_member(cur, code, body.nickname, is_host=True)
+        member_id, token = _insert_member(cur, code, body.nickname, is_host=True, user_id=user and user.id)
 
         items = recommend.build(body.region, body.transport, body.duration, body.season)
         cur.executemany(
@@ -76,7 +79,7 @@ def create_trip(body: TripCreate, db: Db):
     response_model=MemberJoined,
     dependencies=[Depends(security.join_trip_limit)],
 )
-def join_trip(code: str, body: MemberCreate, db: Db):
+def join_trip(code: str, body: MemberCreate, db: Db, user: OptionalUser):
     # 명세 "값 규칙": 형식이 틀린 코드도 TRIP_NOT_FOUND
     normalized = security.normalize_code(code)
     with db.cursor() as cur:
@@ -85,7 +88,7 @@ def join_trip(code: str, body: MemberCreate, db: Db):
         if not normalized or cur.fetchone() is None:
             raise ApiError(404, "TRIP_NOT_FOUND", "여행을 찾을 수 없습니다.")
 
-        member_id, token = _insert_member(cur, normalized, body.nickname, is_host=False)
+        member_id, token = _insert_member(cur, normalized, body.nickname, is_host=False, user_id=user and user.id)
         cur.execute("SELECT COUNT(*) AS n FROM members WHERE trip_code = %s", (normalized,))
         count = cur.fetchone()["n"]
 
@@ -93,7 +96,7 @@ def join_trip(code: str, body: MemberCreate, db: Db):
     return MemberJoined(code=normalized, token=token, me=Me(member_id=member_id, nickname=body.nickname, is_host=False))
 
 
-def _rate(done: int, total: int) -> int:
+def rate(done: int, total: int) -> int:
     # 0~100 정수, 반올림(0.5는 올림). 항목이 0개면 0.
     return (done * 200 + total) // (total * 2) if total else 0
 
@@ -161,13 +164,13 @@ def get_trip(me: CurrentMember, db: Db):
             "total": total,
             "done": done,
             "unassigned": int(totals["unassigned"]),
-            "rate": _rate(done, total),
+            "rate": rate(done, total),
             "by_member": [
                 {
                     "member_id": row["member_id"],
                     "assigned": int(row["assigned"]),
                     "done": int(row["done"]),
-                    "rate": _rate(int(row["done"]), int(row["assigned"])),
+                    "rate": rate(int(row["done"]), int(row["assigned"])),
                 }
                 for row in by_member
             ],
