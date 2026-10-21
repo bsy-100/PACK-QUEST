@@ -1,4 +1,4 @@
-"""공유 코드·토큰 생성, 사용자 IP, 요청 제한."""
+"""공유 코드·토큰 생성, 비밀번호 해시, 사용자 IP, 요청 제한."""
 
 import hashlib
 import re
@@ -35,6 +35,26 @@ def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
+# 비밀번호: scrypt(표준 라이브러리). 저장 형식 "scrypt$<salt hex>$<hash hex>"
+_SCRYPT = {"n": 2**14, "r": 8, "p": 1, "dklen": 32}
+
+
+def hash_password(password: str) -> str:
+    salt = secrets.token_bytes(16)
+    digest = hashlib.scrypt(password.encode(), salt=salt, **_SCRYPT)
+    return f"scrypt${salt.hex()}${digest.hex()}"
+
+
+def verify_password(password: str, stored: str | None) -> bool:
+    # 없는 아이디여도 같은 시간이 걸리게 가짜 값으로 한 번 계산한다(아이디 존재 숨김).
+    _, salt, digest = (stored or _DUMMY_HASH).split("$")
+    got = hashlib.scrypt(password.encode(), salt=bytes.fromhex(salt), **_SCRYPT)
+    return stored is not None and secrets.compare_digest(got.hex(), digest)
+
+
+_DUMMY_HASH = hash_password("dummy")
+
+
 def client_ip(request: Request) -> str:
     # 명세 "요청 제한": CloudFront-Viewer-Address에서 포트(마지막 콜론 뒤)를 뗀다.
     viewer = request.headers.get("cloudfront-viewer-address")
@@ -65,3 +85,5 @@ class RateLimiter:
 
 create_trip_limit = RateLimiter(10)
 join_trip_limit = RateLimiter(60)
+# 발표장은 같은 Wi-Fi(같은 IP)라 너무 낮으면 청중 가입이 막힌다.
+auth_limit = RateLimiter(30)

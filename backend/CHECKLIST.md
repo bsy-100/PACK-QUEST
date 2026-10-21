@@ -113,14 +113,14 @@
 ### 먼저 필요한 것 (A·C)
 
 - [x] A: S3 버킷 `packquest-web-1b07b2`(10/20)
-- [ ] A: CloudFront VPC 오리진, `sg-app`에 CloudFront에서 오는 8000번 허용, `/api/*` 동작(원본 요청 정책 `Managed-AllViewerAndCloudFrontHeaders-2022-06`, 사용자 지정 오류 응답 없음)
-- [ ] C: 화면 S3 업로드 — 10/20 뼈대 화면은 올라가 있음, 최종본 업로드는 남음
+- [x] A: CloudFront VPC 오리진, `sg-app`에 CloudFront에서 오는 8000번 허용, `/api/*` 동작(원본 요청 정책 `Managed-AllViewerAndCloudFrontHeaders-2022-06`, 사용자 지정 오류 응답 없음) — 10/20 앞당겨 완료, `https://d1ra4yni7dggze.cloudfront.net`
+- [ ] C: 화면 S3 업로드 — 10/20 디자인 개편본까지 올라가 있음, 최종본 업로드는 남음
 
 ### 내 할 일
 
 - [x] `DEPLOY.md` 순서대로 배포: 패키지 → 코드(https, 공개 저장소) → 설정 파일 → 연결 확인 → systemd — 10/20에 앞당겨 완료(코드는 A가 Deploy key로 받음), 재부팅 후 자동 시작 확인
 - [x] 서버 안에서 `python3 tests/smoke_test.py http://127.0.0.1:8000/api` 통과 — 43/43(10/20)
-- [ ] CloudFront 연결 후 `python3 tests/smoke_test.py https://<CloudFront 도메인>/api` 통과
+- [x] CloudFront 연결 후 `python3 tests/smoke_test.py https://d1ra4yni7dggze.cloudfront.net/api` 통과 — 43/43(10/20, B PC에서)
 - [ ] C와 화면·API 연동 확인: 여행 만들기 → 참여 → 맡기 → 체크 → 진행률 → 삭제
 - [ ] 서버 로그에서 `X-Pack-Token`, `CloudFront-Viewer-Address`가 들어오는지 확인(요청 제한 IP 구분)
 - [ ] 배포한 사람·시간·커밋을 팀 채팅에 기록

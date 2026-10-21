@@ -1,4 +1,7 @@
-"""명세 "검사 순서": 토큰이 필요한 API(4~9번)는 토큰부터 확인한다."""
+"""명세 "검사 순서": 토큰이 필요한 API(4~9번)는 토큰부터 확인한다.
+
+X-Pack-Token: 여행 참여자(여행마다 하나). X-Auth-Token: 로그인 계정(선택).
+"""
 
 from dataclasses import dataclass
 from typing import Annotated
@@ -47,3 +50,41 @@ CurrentMember = Annotated[Member, Depends(current_member)]
 def host_only(member: Member) -> None:
     if not member.is_host:
         raise ApiError(403, "HOST_ONLY", "주최자만 할 수 있습니다.")
+
+
+@dataclass
+class User:
+    id: int
+    username: str
+    nickname: str
+    session_hash: str  # 로그아웃할 때 지울 세션
+
+
+def _find_user(db, token: str) -> User | None:
+    session_hash = security.hash_token(token)
+    with db.cursor() as cur:
+        cur.execute(
+            """SELECT u.id, u.username, u.nickname FROM sessions s JOIN users u ON u.id = s.user_id
+               WHERE s.token_hash = %s AND s.expires_at > UTC_TIMESTAMP()""",
+            (session_hash,),
+        )
+        row = cur.fetchone()
+    return User(**row, session_hash=session_hash) if row else None
+
+
+def current_user(db: Db, x_auth_token: Annotated[str | None, Header()] = None) -> User:
+    if not x_auth_token:
+        raise ApiError(401, "AUTH_MISSING", "로그인이 필요합니다.")
+    user = _find_user(db, x_auth_token)
+    if user is None:
+        raise ApiError(401, "AUTH_INVALID", "로그인이 만료되었거나 올바르지 않습니다.")
+    return user
+
+
+def optional_user(db: Db, x_auth_token: Annotated[str | None, Header()] = None) -> User | None:
+    """여행 만들기·참여: 로그인 토큰이 있으면 계정에 연결한다. 틀린 토큰은 조용히 넘기지 않는다."""
+    return current_user(db, x_auth_token) if x_auth_token else None
+
+
+CurrentUser = Annotated[User, Depends(current_user)]
+OptionalUser = Annotated[User | None, Depends(optional_user)]
