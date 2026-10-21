@@ -260,7 +260,7 @@ sudo mariadb -e "SELECT COUNT(*) FROM packquest.members;"   # L1과 같은 수
   - 조회로 확인한 AWS 쪽: 두 EC2 running·상태 검사 ok, IP 그대로(10.0.1.154 / 10.0.2.237), `/packquest/db-password` 버전 3 그대로(10/20 이후 변경 없음), sg-db 3306 ← sg-app 그대로
   - 원인(10/21 사용자 확인): Backend `journalctl`에 `(2003, "Can't connect ... ([Errno -2] Name or service not known)")`. DB 서버 MariaDB는 active, `10.0.2.237:3306` LISTEN으로 정상. `/etc/packquest/api.env`의 `DB_HOST`가 예시 자리표시 글자(`<DB 사설 IP>`) 그대로였음(재배포 때 예시로 덮어쓴 것으로 추정)
   - 조치: `sed`로 `DB_HOST=10.0.2.237` 수정(`cat -A`로 확인) → `systemctl restart packquest-api` → active. B에게 전달: 재배포 때 `api.env.example` 복사는 처음 한 번만
-- 10/21 2차 시도(에이전트, CloudFront 경유): **21개 모두 통과**. 테스트 아이디 `pqtest_f6e3a5`(삭제 API가 없어 users에 남음, 세션은 로그아웃으로 삭제, 테스트 여행 2개는 API로 삭제)
+- 10/21 2차 시도(에이전트, CloudFront 경유): **21개 모두 통과**. 테스트 아이디 `pqtest_f6e3a5`(세션은 로그아웃으로, 테스트 여행 2개는 API로 삭제. 계정은 삭제 API가 없어 10/21 DB 서버에서 root로 `DELETE FROM users WHERE username='pqtest_f6e3a5'` 실행 — 사용자 삭제 완료 확인)
 - [x] 가입 201 → 같은 아이디 409 → 로그인 200 → `GET /api/me`가 `X-Auth-Token`으로 200(헤더가 서버까지 옴, 실제 경로는 `/api/me`), 토큰 없음 401 `AUTH_MISSING`, 틀린 토큰 401 `AUTH_INVALID`, 로그아웃 204 후 같은 토큰 401 — 10/21
 - [x] 잘못된 비밀번호와 없는 아이디의 응답 코드·메시지가 같음(둘 다 401 `LOGIN_FAILED`) — 10/21
 - [x] 로그인 실패 반복 시 429 `RATE_LIMITED` JSON(분당 30회, 앞선 auth 요청 5회 포함 26번째) — 10/21
