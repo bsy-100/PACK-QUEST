@@ -1,5 +1,5 @@
 /* 가짜 서버. 주소에 ?mock=1 이 있을 때만 켜진다.
-   B의 서버 없이 화면을 개발·확인하려고 API 명세(9개 API, 권한 규칙, 오류 코드)를 브라우저 안에서 흉내 낸다.
+   B의 서버 없이 화면을 개발·확인하려고 API 명세(9개 API + 로그인 API 5개, 권한 규칙, 오류 코드)를 브라우저 안에서 흉내 낸다.
    실제 배포에서는 ?mock=1 을 붙이지 않으므로 아무 일도 하지 않는다.
 
    - 데이터는 localStorage의 packquest-mockdb 키에 저장한다(새로고침해도 유지).
@@ -83,13 +83,15 @@
   /* ---------- 저장소 ---------- */
 
   function emptyDb() {
-    return { trips: {}, members: [], items: [], nextMemberId: 1, nextItemId: 1 };
+    return { trips: {}, members: [], items: [], nextMemberId: 1, nextItemId: 1, users: [], sessions: [], nextUserId: 1 };
   }
 
   let db;
   function load() {
     try { db = JSON.parse(localStorage.getItem(DB_KEY)) || null; } catch (e) { db = null; }
     if (!db) { db = emptyDb(); seedDemo(); save(); }
+    // 로그인 기능이 생기기 전에 저장된 가짜 DB에는 이 필드가 없다.
+    if (!db.users) { db.users = []; db.sessions = []; db.nextUserId = 1; }
   }
   function save() {
     try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch (e) { /* 저장 못 해도 이번 화면에서는 동작 */ }
@@ -111,8 +113,11 @@
       db.items.push({ id: db.nextItemId++, trip_code: code, name, category, assignee_id: null, done: false, source: "recommended" });
     });
   }
-  function insertMember(code, nickname, isHost, isBot) {
-    const member = { id: db.nextMemberId++, trip_code: code, nickname, token: randomToken(), is_host: isHost, is_bot: isBot };
+  function insertMember(code, nickname, isHost, isBot, userId) {
+    const member = {
+      id: db.nextMemberId++, trip_code: code, nickname, token: randomToken(),
+      is_host: isHost, is_bot: isBot, user_id: userId || null,
+    };
     db.members.push(member);
     return member;
   }
@@ -163,6 +168,28 @@
     const me = db.members.find((m) => m.token === token);
     if (!me || me.trip_code !== code) fail(401, "TOKEN_INVALID");
     return me;
+  }
+  // 로그인 토큰(X-Auth-Token) 검사. 명세: 없으면 AUTH_MISSING, 틀리거나 로그아웃했으면 AUTH_INVALID.
+  function loginUser(headers) {
+    const token = headers["X-Auth-Token"];
+    if (!token) fail(401, "AUTH_MISSING");
+    const session = db.sessions.find((s) => s.token === token);
+    const user = session && db.users.find((u) => u.id === session.user_id);
+    if (!user) fail(401, "AUTH_INVALID");
+    return { user, token };
+  }
+  // 여행 만들기·참여에서는 로그인이 선택이다. 붙이지 않으면 null, 붙였는데 틀리면 AUTH_INVALID.
+  function optionalUser(headers) {
+    if (!headers["X-Auth-Token"]) return null;
+    return loginUser(headers).user;
+  }
+  function userOut(u) {
+    return { user_id: u.id, username: u.username, nickname: u.nickname };
+  }
+  function newSession(user) {
+    const token = "mock-auth-" + randomBytes(24).map((b) => b.toString(16).padStart(2, "0")).join("");
+    db.sessions.push({ token, user_id: user.id });
+    return token;
   }
   function findItem(code, rawId) {
     const id = /^\d+$/.test(rawId) ? Number(rawId) : NaN; // 숫자가 아니면 ITEM_NOT_FOUND
@@ -217,6 +244,80 @@
     };
   }
 
+  // 내 여행 목록용 요약 진행률
+  function tripSummary(code) {
+    const items = db.items.filter((i) => i.trip_code === code);
+    const done = items.filter((i) => i.done).length;
+    return { total: items.length, done, rate: rate(done, items.length) };
+  }
+
+  /* ---------- 로그인 API 5개 (docs/API_AUTH.md) ---------- */
+
+  function routeAuth(parts, method, headers, body) {
+    const allow = (...methods) => { if (!methods.includes(method)) fail(405, "METHOD_NOT_ALLOWED"); };
+
+    // A1. POST /api/auth/signup
+    if (parts[0] === "auth" && parts[1] === "signup" && parts.length === 2) {
+      allow("POST");
+      const raw = typeof body.username === "string" ? body.username : "";
+      if (!/^[A-Za-z0-9_]{4,20}$/.test(raw)) fail(422, "VALIDATION_ERROR");
+      const password = typeof body.password === "string" ? body.password : "";
+      if (password.length < PQ.LIMITS.passwordMin || password.length > PQ.LIMITS.passwordMax) fail(422, "VALIDATION_ERROR");
+      const nickname = cleanText(body.nickname, PQ.LIMITS.nicknameMax);
+      const username = raw.toLowerCase(); // 소문자로 저장한다
+      if (db.users.some((u) => u.username === username)) fail(409, "USERNAME_TAKEN");
+      const user = { id: db.nextUserId++, username, password, nickname }; // mock이라 비밀번호는 그대로 둔다
+      db.users.push(user);
+      return json(201, { token: newSession(user), user: userOut(user) });
+    }
+
+    // A2. POST /api/auth/login
+    if (parts[0] === "auth" && parts[1] === "login" && parts.length === 2) {
+      allow("POST");
+      const username = typeof body.username === "string" ? body.username.toLowerCase() : "";
+      const user = db.users.find((u) => u.username === username);
+      // 아이디가 없는지 비밀번호가 틀렸는지 구분하지 않는다.
+      if (!user || user.password !== body.password) fail(401, "LOGIN_FAILED");
+      return json(200, { token: newSession(user), user: userOut(user) });
+    }
+
+    // A3. POST /api/auth/logout — 이 기기의 로그인 토큰만 지운다.
+    if (parts[0] === "auth" && parts[1] === "logout" && parts.length === 2) {
+      allow("POST");
+      const { token } = loginUser(headers);
+      db.sessions = db.sessions.filter((s) => s.token !== token);
+      return new Response(null, { status: 204 });
+    }
+
+    // A4. GET /api/me
+    if (parts[0] === "me" && parts.length === 1) {
+      allow("GET");
+      const { user } = loginUser(headers);
+      const trips = db.members
+        .filter((m) => m.user_id === user.id && db.trips[m.trip_code])
+        .sort((a, b) => b.id - a.id) // 최근에 참여한 순서
+        .map((m) => ({
+          ...db.trips[m.trip_code],
+          me: memberOut(m),
+          progress: tripSummary(m.trip_code),
+        }));
+      return json(200, { user: userOut(user), trips });
+    }
+
+    // A5. POST /api/me/trips/{code}/token — 새 여행 토큰을 주고, 예전 기기의 토큰은 무효가 된다.
+    if (parts[0] === "me" && parts[1] === "trips" && parts[3] === "token" && parts.length === 4) {
+      allow("POST");
+      const { user } = loginUser(headers);
+      const code = PQ.normalizeCode(parts[2]);
+      const member = db.members.find((m) => m.trip_code === code && m.user_id === user.id);
+      if (!member || !db.trips[code]) fail(404, "TRIP_NOT_FOUND");
+      member.token = randomToken();
+      return json(200, { code, token: member.token, me: memberOut(member) });
+    }
+
+    fail(404, "NOT_FOUND");
+  }
+
   function route(method, path, headers, body) {
     const parts = path.replace(/^\/api\/?/, "").split("/").filter(Boolean).map(decodeURIComponent);
     const allow = (...methods) => { if (!methods.includes(method)) fail(405, "METHOD_NOT_ALLOWED"); };
@@ -226,11 +327,13 @@
       allow("GET");
       return json(200, { status: "ok" });
     }
+    if (parts[0] === "auth" || parts[0] === "me") return routeAuth(parts, method, headers, body);
     if (parts[0] !== "trips") fail(404, "NOT_FOUND");
 
     // 2. POST /api/trips
     if (parts.length === 1) {
       allow("POST");
+      const user = optionalUser(headers); // 로그인 상태면 이 참여자를 계정에 연결한다
       const cond = {
         region: oneOf(body.region, VALUES.region),
         transport: oneOf(body.transport, VALUES.transport),
@@ -241,7 +344,7 @@
       let code;
       do { code = randomCode(); } while (db.trips[code]); // 겹치면 다시 뽑는다
       insertTrip(code, cond);
-      const host = insertMember(code, nickname, true, false);
+      const host = insertMember(code, nickname, true, false, user && user.id);
       // 데모용 가짜 참여자 2명
       insertMember(code, "민지", false, true);
       insertMember(code, "현우", false, true);
@@ -253,11 +356,14 @@
     // 3. POST /api/trips/{code}/members
     if (parts.length === 3 && parts[2] === "members") {
       allow("POST");
+      const user = optionalUser(headers);
       if (!db.trips[code]) fail(404, "TRIP_NOT_FOUND"); // 형식이 틀린 코드도 여기서 걸린다
       const nickname = cleanText(body.nickname, PQ.LIMITS.nicknameMax);
+      // 같은 계정이 같은 여행에 두 번 참여하면 다시 들어가기(A5)로 안내한다.
+      if (user && db.members.some((m) => m.trip_code === code && m.user_id === user.id)) fail(409, "ALREADY_JOINED");
       const taken = db.members.some((m) => m.trip_code === code && m.nickname.toLowerCase() === nickname.toLowerCase());
       if (taken) fail(409, "NICKNAME_TAKEN");
-      const member = insertMember(code, nickname, false, false);
+      const member = insertMember(code, nickname, false, false, user && user.id);
       return json(201, { code, token: member.token, me: memberOut(member) });
     }
 
@@ -361,6 +467,7 @@
     reset() {
       try { localStorage.removeItem(DB_KEY); } catch (e) { /* 무시 */ }
       PQ.tokenStore.list().forEach((t) => PQ.tokenStore.remove(t.code));
+      PQ.authStore.clear();
       load();
       console.info("[mock] 초기화했습니다. 새로고침하세요.");
     },
