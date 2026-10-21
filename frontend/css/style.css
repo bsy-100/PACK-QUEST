@@ -79,6 +79,8 @@ h1, h2, p { margin: 0; }
 }
 
 .brand {
+  flex-shrink: 0;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 8px;
