@@ -153,7 +153,7 @@ CloudFront ──(화면 파일)──▶ S3 (비공개 버킷, OAC)
 
 | 영역 | 한 일 |
 |---|---|
-| 서버 접속 | SSM Session Manager만 사용. 22번 포트를 열지 않고 키 페어도 만들지 않았다 |
+| 서버 접속 | SSM Session Manager만 사용. 22번 포트를 열지 않았다(보안 그룹에 22번 규칙 없음). 키 페어는 PRD 계획이 "만들지 않음"인데 실제로 만들지 않았는지 A에게 확인 **[A 확인]** |
 | 서버 노출 | 두 서버 모두 공인 IP 없음. 앱 서버는 CloudFront에서 온 요청만 받는다 |
 | DB | 앱 전용 계정(SELECT·INSERT·UPDATE·DELETE만), root 원격 로그인 차단, 3306은 앱 서버에서만 |
 | DB 비밀번호 | Parameter Store(SecureString)에 보관, Backend 서버 역할만 그 파라미터를 읽는다. 코드·GitHub에 비밀번호 없음 |
