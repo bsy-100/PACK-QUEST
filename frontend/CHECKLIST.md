@@ -87,6 +87,7 @@
 - [x] A: VPC 오리진 생성(Deployed 상태) — 10/20
 - [x] A: CloudFront 배포 생성 — S3 오리진 `packquest-web-1b07b2`, 도메인 https://d1ra4yni7dggze.cloudfront.net (10/20)
 - [x] A: Route 53 사용자 지정 도메인 `packquest.pmk.mzsec.cloud`와 ACM 인증서를 CloudFront에 연결 — 10/21 연결, 10/22 확인(HTTPS 200, `/api/health` JSON, http는 https로 이동). 옛 CloudFront 주소도 예비로 계속 열림
+- [x] A: CloudFront 보안 응답 헤더 정책(관리형 `SecurityHeadersPolicy`) 적용 — 10/22. 화면과 `/api/*` 응답에서 HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy 확인(CSP는 넣지 않음). 글꼴·로그인은 폰으로 확인 필요
 - [x] A: 콘솔이 보여주는 OAC 버킷 정책을 버킷에 붙이기 — 화면이 열림(403 아님)
 - [x] A: `/api/*` 동작 — `/api/health` JSON, 없는 코드 오류가 JSON으로 옴(10/20 확인)
 - [x] A·B: `main`으로 합치기 전에 내 브랜치 확인(리뷰) — PR #7을 B가 머지(10/21 11:02)
@@ -168,7 +169,7 @@
 - [ ] 발표
 - [ ] 발표 후: 데모용 여행 삭제, 발표 PC에서 로그아웃, 데모 계정 정리(DB에서 삭제는 B·A)
 - [ ] 발표 후 리소스 삭제(단계 19, A 진행) 때 S3 버킷(A가 만듦)을 비우고 삭제하는 순서를 A와 확인
-- [ ] 발표 후: GitHub 저장소 Settings → Deploy keys에서 Backend 서버용 키 삭제 — 저장소 주인(bsy-100)이 C라서 C 계정으로 해야 한다(A가 Deploy key로 서버 코드를 받음)
+- [ ] A: Backend 서버의 미사용 SSH 키 `~/.ssh/packquest_deploy` 삭제 — 10/20에 Deploy key용으로 만들었지만 GitHub에 등록하지 않았고 쓰지 않는다(서버는 공개 저장소를 https로 받는다). GitHub Deploy keys 화면은 비어 있음(10/22 확인)
 
 ### 완료 기준
 
