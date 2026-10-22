@@ -84,7 +84,7 @@
 - **AWS 작업은 A 노트북 한 대로 한다.** 계정(IAM 사용자) 하나를 셋이 같이 쓴다. B의 서버 작업도 A 노트북에서 하므로 매일 아침 사용 순서를 정한다
 - **S3 버킷은 A가 공용 계정에 만든다**(`packquest-web-1b07b2`, 10/20 완료). C는 화면 파일 업로드와 캐시 무효화만 한다
 - **배포는 저장소의 `DEPLOY.md` 기준.** A의 PLAN-B.md와 경로가 다르다. 실제 서버는 `~/PACK-QUEST/backend`, 설정은 `/etc/packquest/api.env`
-- **서버 코드는 공개 저장소를 https로 받았다.** 서버에 GitHub 자격 증명(토큰, 저장된 자격 증명, 등록된 Deploy key)이 없다. 10/20에 A가 Deploy key용 SSH 키(`~/.ssh/packquest_deploy`)를 만들었지만 GitHub에 등록하지 않아 쓰지 않았고, 발표 후 서버에서 삭제한다
+- **서버 코드는 공개 저장소를 https로 받았다.** 서버에 GitHub 자격 증명(토큰, 저장된 자격 증명, 등록된 Deploy key)이 없다. 10/20에 A가 Deploy key용 SSH 키(`~/.ssh/packquest_deploy`)를 만들었지만 GitHub에 등록하지 않아 쓰지 않았다(GitHub Deploy keys 화면은 비어 있음, 10/22 확인). 서버 파일은 따로 지우지 않고 발표 후 서버 삭제 때 함께 사라진다
 
 ### 서버 정보
 
@@ -147,7 +147,7 @@
 
 - [ ] 최종 배포 확인, 시연 리허설
 - [ ] 데모 중 서버 로그 보여주기: `journalctl -u packquest-api -f -o cat`
-- [ ] 발표 후: 서버의 미사용 SSH 키(`~/.ssh/packquest_deploy`) 삭제, AWS 리소스 삭제 확인(예산 알람이 없어 NAT 비용이 계속 나간다)
+- [ ] 발표 후: AWS 리소스 삭제 확인(예산 알람이 없어 NAT 비용이 계속 나간다)
 
 ---
 
