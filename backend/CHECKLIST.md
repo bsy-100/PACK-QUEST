@@ -84,7 +84,7 @@
 - **AWS 작업은 A 노트북 한 대로 한다.** 계정(IAM 사용자) 하나를 셋이 같이 쓴다. B의 서버 작업도 A 노트북에서 하므로 매일 아침 사용 순서를 정한다
 - **S3 버킷은 A가 공용 계정에 만든다**(`packquest-web-1b07b2`, 10/20 완료). C는 화면 파일 업로드와 캐시 무효화만 한다
 - **배포는 저장소의 `DEPLOY.md` 기준.** A의 PLAN-B.md와 경로가 다르다. 실제 서버는 `~/PACK-QUEST/backend`, 설정은 `/etc/packquest/api.env`
-- **서버 코드는 A가 Deploy key로 받았다.** 그대로 써도 되고, 발표 후 GitHub에서 키를 삭제한다
+- **서버 코드는 공개 저장소를 https로 받았다.** 서버에 GitHub 자격 증명(토큰, 저장된 자격 증명, 등록된 Deploy key)이 없다. 10/20에 A가 Deploy key용 SSH 키(`~/.ssh/packquest_deploy`)를 만들었지만 GitHub에 등록하지 않아 쓰지 않았고, 발표 후 서버에서 삭제한다
 
 ### 서버 정보
 
@@ -118,7 +118,7 @@
 
 ### 내 할 일
 
-- [x] `DEPLOY.md` 순서대로 배포: 패키지 → 코드(https, 공개 저장소) → 설정 파일 → 연결 확인 → systemd — 10/20에 앞당겨 완료(코드는 A가 Deploy key로 받음), 재부팅 후 자동 시작 확인
+- [x] `DEPLOY.md` 순서대로 배포: 패키지 → 코드(https, 공개 저장소) → 설정 파일 → 연결 확인 → systemd — 10/20에 앞당겨 완료(코드는 https로 받음, Deploy key 미사용), 재부팅 후 자동 시작 확인
 - [x] 서버 안에서 `python3 tests/smoke_test.py http://127.0.0.1:8000/api` 통과 — 43/43(10/20)
 - [x] CloudFront 연결 후 `python3 tests/smoke_test.py https://d1ra4yni7dggze.cloudfront.net/api` 통과 — 43/43(10/20, B PC에서)
 - [x] C와 화면·API 연동 확인: 여행 만들기 → 참여 → 맡기 → 체크 → 진행률 → 삭제 — PC·휴대폰으로 비로그인 흐름, 로그인 후 다른 기기에서 열기(주최자 권한 유지, 처음 기기에 안내)까지 확인(10/21)
@@ -147,7 +147,7 @@
 
 - [ ] 최종 배포 확인, 시연 리허설
 - [ ] 데모 중 서버 로그 보여주기: `journalctl -u packquest-api -f -o cat`
-- [ ] 발표 후: GitHub Deploy key 삭제, AWS 리소스 삭제 확인(예산 알람이 없어 NAT 비용이 계속 나간다)
+- [ ] 발표 후: 서버의 미사용 SSH 키(`~/.ssh/packquest_deploy`) 삭제, AWS 리소스 삭제 확인(예산 알람이 없어 NAT 비용이 계속 나간다)
 
 ---
 

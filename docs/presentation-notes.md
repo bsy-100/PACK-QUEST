@@ -128,7 +128,7 @@ PACK QUEST만의 포인트:
 
 ```
 브라우저(휴대폰·PC)
-   │ HTTPS, CloudFront 도메인 하나
+   │ HTTPS, 사용자 지정 도메인 하나 (Route 53 + ACM 인증서)
 CloudFront ──(화면 파일)──▶ S3 (비공개 버킷, OAC)
    │ /api/*  (VPC 오리진)
 ┌──────────────── VPC ────────────────┐
@@ -153,7 +153,7 @@ CloudFront ──(화면 파일)──▶ S3 (비공개 버킷, OAC)
 
 | 영역 | 한 일 |
 |---|---|
-| 서버 접속 | SSM Session Manager만 사용. 22번 포트를 열지 않고 키 페어도 만들지 않았다 |
+| 서버 접속 | SSM Session Manager만 사용. 22번 포트를 열지 않았고 키 페어도 만들지 않았다(A의 구축 기록 `infra/PLAN-A.md`에서 서버 생성 시 "키 페어 없음"으로 확인) |
 | 서버 노출 | 두 서버 모두 공인 IP 없음. 앱 서버는 CloudFront에서 온 요청만 받는다 |
 | DB | 앱 전용 계정(SELECT·INSERT·UPDATE·DELETE만), root 원격 로그인 차단, 3306은 앱 서버에서만 |
 | DB 비밀번호 | Parameter Store(SecureString)에 보관, Backend 서버 역할만 그 파라미터를 읽는다. 코드·GitHub에 비밀번호 없음 |

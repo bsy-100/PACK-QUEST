@@ -10,7 +10,8 @@ PRD 구축 절차 14단계(화면 업로드)와 18단계(리소스 기록)를 �
 | 항목 | 값 |
 |---|---|
 | S3 버킷 | `packquest-web-1b07b2` (서울 리전, 퍼블릭 액세스 모두 차단, 정적 웹 호스팅 끔). A가 만듦 |
-| CloudFront 도메인 | https://d1ra4yni7dggze.cloudfront.net — 화면은 S3(OAC), `/api/*`는 Backend 서버. A가 만듦 |
+| 서비스 주소 | https://packquest.pmk.mzsec.cloud — Route 53 도메인을 CloudFront에 연결, 인증서는 ACM. 화면은 S3(OAC), `/api/*`는 Backend 서버. A가 만듦. 브라우저 localStorage는 도메인별이라 옛 주소에서 만든 여행·로그인은 이 주소에서 보이지 않는다 |
+| CloudFront 기본 주소(예비) | https://d1ra4yni7dggze.cloudfront.net — 같은 배포. 도메인 연결 뒤에도 열리며 전환 기간 예비로만 확인한다 |
 | 올리는 파일 | `frontend/` 안의 `index.html`, `css/style.css`, `js/` 5개(`api.js`, `app.js`, `constants.js`, `mock.js`, `personal.js`) — 모두 7개 |
 | 올리지 않는 파일 | `frontend/CHECKLIST.md`(올리면 누구나 볼 수 있다), `.gitkeep`, `tools/`, `docs/`, `backend/` |
 
@@ -74,8 +75,8 @@ find ~/upload-web -type f | sort
 
 | 순서 | 확인 | 기대 결과 |
 |---|---|---|
-| 1 | https://d1ra4yni7dggze.cloudfront.net | 새 화면이 열린다(403 아님). 예전 화면이면 Ctrl+Shift+R |
-| 2 | https://d1ra4yni7dggze.cloudfront.net/api/health | JSON 응답 |
+| 1 | https://packquest.pmk.mzsec.cloud | 새 화면이 열린다(403 아님, 인증서 경고 없음). 예전 화면이면 Ctrl+Shift+R |
+| 2 | https://packquest.pmk.mzsec.cloud/api/health | JSON 응답 |
 | 3 | 없는 코드(예: `ABCD2345`)로 합류 | "여행을 찾을 수 없어요" 안내(서버가 HTML이 아닌 JSON 오류를 보냄) |
 | 4 | `?mock=1` 없이 여행 만들기 → 맡기 → 체크 → 진행률 | 실제 API로 끝까지 된다. 휴대폰으로 같은 코드에 합류해 참여자 화면도 본다 |
 | 5 | 로그인 없이 여행 만들기·참여 | 로그인하지 않아도 4번이 그대로 된다 |
